@@ -22,7 +22,7 @@
   canvas { display: block; width: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
   .tag, .bub { position: absolute; transform: translate(-50%, -100%); line-height: 1.25; white-space: nowrap; pointer-events: none; }
   .tag { font-size: 11px; padding: 1px 4px; background: rgba(255, 255, 255, .88); border: 1px solid var(--ink); border-radius: 3px; }
-  .tag.room { font-weight: bold; background: rgba(255, 248, 230, .9); }
+  .tag.room { font-weight: bold; background: rgba(255, 248, 230, .9); transform: translate(0, -100%); }
   .tag.pod { font-size: 10px; padding: 0 3px; border-color: #8a7a6a; }
   .bub { font-size: 12px; padding: 2px 6px; background: #fff3d6; border: 2px solid var(--accent); border-radius: 6px; font-weight: bold; animation: pop .25s ease-out; }
   .bub.ok { border-color: var(--ok); background: #e9f6ee; }
@@ -35,6 +35,10 @@
   .meta details { font-size: 12px; }
   .meta summary { cursor: pointer; }
   .meta details p { margin: 4px 0; max-width: 560px; color: var(--ink); }
+  .choices { display: flex; gap: 6px; flex-wrap: wrap; }
+  .choices:not(:empty) { margin: 8px 0 2px; }
+  .choices button { font: inherit; font-size: 13px; padding: 4px 10px; border: 2px solid var(--accent); border-radius: 14px; background: #fff; color: var(--ink); cursor: pointer; }
+  .choices button:hover { background: #fff3d6; }
   .ledger { flex: 0 1 330px; background: #fffdf5; border: 2px solid var(--ink); border-radius: 6px; padding: 8px 10px; font-size: 13px; }
   .ledger .lh { font-weight: bold; margin-bottom: 2px; }
   .ledger .lrs { font-size: 12px; color: #7a6a6a; margin-bottom: 4px; }
@@ -73,6 +77,7 @@
   <div class="panel">
     <div class="say">
       <div id="lines"></div>
+      <div id="choices" class="choices"></div>
       <div class="meta">
         <span id="clock"></span>
         <details id="ref"><summary>근거</summary><p id="refText"></p><p><a id="refLink" target="_blank" rel="noopener"></a></p></details>
@@ -80,7 +85,7 @@
     </div>
     <div class="ledger">
       <div class="lh" data-m="장부" data-t="etcd"></div>
-      <div class="lrs" data-m="정원: 3명 · 장부는 창구직원만 씀" data-t="ReplicaSet replicas: 3 · etcd는 apiserver만 씀"></div>
+      <div class="lrs" id="lrs"></div>
       <table><thead><tr><th data-m="이름" data-t="NAME"></th><th data-m="층" data-t="NODE"></th><th data-m="상태" data-t="STATUS"></th></tr></thead><tbody id="lt"></tbody></table>
     </div>
   </div>
@@ -234,12 +239,19 @@ function initState() {
     kub: ROOM_X.map((x0) => ({ x: x0 + 1, feet: 137, dy: 0 })),
     apiAwake: false,
     drawer: 0,
+    rooms: ROOM_X.map(() => ({ win: false, taint: false })), // 창가 = 라벨, 공사 중 = taint
     pods: [], ledger: [], envs: [], rings: [], bangs: [],
-    phase: 'idle', victim: null, fresh: null, target: null,
+    phase: 'idle', victim: null, fresh: null, target: null, plan: null, used: false,
   };
-  addPod(0, 0); addPod(0, 1); addPod(1, 0);
+  SC.init();
   S.pods.forEach((p) => { p.state = 'run'; S.ledger.push({ id: p.id, node: p.node, st: 'run' }); });
 }
+
+// 층 n 에서 쓰고 있는 책상 칸 수 (종료 중인 직원도 자리를 차지한다)
+const seated = (p) => p.node != null && (p.state === 'run' || p.state === 'term');
+const occ = (n) => S.pods.filter((p) => p.node === n && seated(p)).reduce((s, p) => s + p.size, 0);
+const deskTaken = (n, d, except) => S.pods.some((p) => p !== except && p.node === n && seated(p) && (p.desk === d || p.desk2 === d));
+const freeDesks = (n, except) => [0, 1].filter((d) => !deskTaken(n, d, except));
 
 let podSeq = 0;
 function addPod(node, desk) {
@@ -249,7 +261,8 @@ function addPod(node, desk) {
   const sfx = Array.from({ length: 5 }, () => 'bcdfghjklmnpqrstvwxz2456789'[Math.floor(Math.random() * 27)]).join('');
   const p = {
     id: ++podSeq, mn, tn: `${RS_NAME}-${sfx}`, sfx, look: podSeq % LOOKS.emp.length,
-    node, desk, x: deskX(node, desk), feet: DESK_FEET, state: 'none', alpha: 1, box: false, walking: false, dir: 'r',
+    node, desk, desk2: null, size: 1, x: node == null ? 0 : deskX(node, desk), feet: DESK_FEET,
+    state: 'none', alpha: 1, box: false, walking: false, dir: 'r',
   };
   S.pods.push(p);
   return p;
@@ -279,10 +292,24 @@ function drawBG() {
   rect(243, 25, 13, 34, o); rect(244, 26, 12, 33, '#a8693f'); rect(246, 42, 2, 2, '#f5b93a'); // 나 옆 문
   rect(0, 62, W, 6, '#b9a07a'); rect(0, 62, W, 1, o);
   rect(0, 68, W, H - 68, '#cdb68a');
-  ROOM_X.forEach((x0) => {                    // 층(노드)
+  ROOM_X.forEach((x0, n) => {                 // 층(노드)
     rect(x0 - 1, 69, 78, 73, o); rect(x0, 70, 76, 71, '#efe2c6');
     rect(x0, 116, 76, 25, '#d8c099'); rect(x0, 116, 76, 1, '#c4a878');
     rect(x0 + 65, 95, 10, 21, o); rect(x0 + 66, 96, 8, 20, '#a8693f'); rect(x0 + 67, 105, 1, 2, '#f5b93a');
+    const r = S.rooms[n];
+    if (r.win) {                               // 창가 층 (라벨)
+      rect(x0 + 29, 82, 20, 14, o); rect(x0 + 30, 83, 18, 12, '#bfe3f2');
+      rect(x0 + 38, 83, 2, 12, o); rect(x0 + 30, 88, 18, 2, o);
+    }
+    if (r.taint) {                             // 공사 중 (taint): 위쪽 줄무늬 + 문에 X 테이프
+      for (let x = 0; x < 76; x++) for (let y = 0; y < 3; y++) {
+        rect(x0 + x, 70 + y, 1, 1, Math.floor((x + y) / 3) % 2 ? '#f5b93a' : '#3d2c3a');
+      }
+      for (let i = 0; i < 9; i++) {
+        rect(x0 + 66 + i, 98 + i * 2, 1, 2, '#f5b93a');
+        rect(x0 + 74 - i, 98 + i * 2, 1, 2, '#f5b93a');
+      }
+    }
   });
 }
 
@@ -335,6 +362,14 @@ function draw() {
     drawPerson(SPR.emp[p.look], p.x + shake, p.feet, { walking: p.walking, dir: p.dir, alpha: p.alpha });
   });
   ROOM_X.forEach((x0) => DESK_DX.forEach((dx) => ctx.drawImage(SPR.desk, x0 + dx, 119)));
+  S.pods.forEach((p) => {           // 2칸 쓰는 직원: 옆 책상에 서류 더미
+    if (p.desk2 == null || p.state !== 'run') return;
+    const x = ROOM_X[p.node] + DESK_DX[p.desk2];
+    ctx.globalAlpha = p.alpha;
+    rect(x + 4, 113, 8, 7, PALETTE.o); rect(x + 5, 114, 6, 5, '#fffdf5');
+    rect(x + 5, 116, 6, 1, '#c9c6d6'); rect(x + 6, 111, 5, 2, PALETTE.o);
+    ctx.globalAlpha = 1;
+  });
   S.pods.forEach((p) => {           // 짐 상자는 책상보다 앞에 (가려지지 않게)
     if (!p.box || p.state === 'none' || p.state === 'gone') return;
     const shake = !p.walking && T % 24 < 12 ? 1 : 0;
@@ -346,7 +381,7 @@ function draw() {
   S.kub.forEach((k) => drawPerson(SPR.kub, k.x, k.feet + k.dy));
 
   // 클릭할 수 있는 직원 표시
-  if (S.phase === 'idle') {
+  if (SC.clickPods && S.phase === 'idle') {
     const bob = Math.floor(T / 15) % 2;
     S.pods.filter((p) => p.state === 'run').forEach((p) => ctx.drawImage(SPR.arrow, p.x + 4, p.feet - 23 + bob));
   }
@@ -384,10 +419,20 @@ const STATIC_TAGS = [
   { txt: { m: '장부', t: 'etcd' }, at: () => [165, 28] },
   { txt: { m: '정원 담당', t: 'ReplicaSet 컨트롤러' }, at: () => [S.A.rs.x + 6, S.A.rs.feet - 18] },
   { txt: { m: '자리배치 담당', t: 'kube-scheduler' }, at: () => [S.A.sch.x + 10, S.A.sch.feet - 18] },
-  ...ROOM_X.map((x0, n) => ({ txt: ROOMS[n], at: () => [x0 + 10, 78], cls: 'room' })),
+  ...ROOM_X.map((x0, n) => ({ room: n, txt: ROOMS[n], at: () => [x0 + 2, 79], cls: 'room' })),
   ...ROOM_X.map((x0, n) => ({ txt: { m: '층 관리자', t: 'kubelet' }, at: () => [S.kub[n].x + 7, S.kub[n].feet - 18] })),
 ];
 STATIC_TAGS.forEach((s) => { s.el = makeTag(s.txt, s.cls); });
+
+// 층 이름표: 창가 · 공사 중 표시가 장면마다 달라진다
+function refreshRoomTags() {
+  STATIC_TAGS.filter((s) => s.room != null).forEach((s) => {
+    const n = s.room, r = S.rooms[n];
+    s.el.dataset.m = ROOMS[n].m + (r.win ? ' · 창가' : '') + (r.taint ? ' · 공사 중' : '');
+    s.el.dataset.t = ROOMS[n].t + (r.win ? ' · window=yes' : '') + (r.taint ? ' · taint repair' : '');
+    s.el.textContent = s.el.dataset[MODE];
+  });
+}
 
 const podTags = new Map();
 function updateTags() {
@@ -405,16 +450,18 @@ function updateTags() {
 }
 
 let bubbles = [];
-function bubble(x, y, txt, ms = Infinity, cls = '') {
+function bubble(x, y, txt, ms = Infinity, cls = '', keep = false) {
   const d = document.createElement('div');
   d.className = `bub ${cls}`;
   d.dataset.m = txt.m; d.dataset.t = txt.t;
   d.textContent = L(txt);
   place(d, x, y);
   stage.appendChild(d);
-  bubbles.push({ d, until: now + ms });
+  bubbles.push({ d, until: now + ms, keep });
 }
-function clearBubbles() { bubbles.forEach((b) => b.d.remove()); bubbles = []; }
+function clearBubbles(all = false) {
+  bubbles = bubbles.filter((b) => { if (all || !b.keep) { b.d.remove(); return false; } return true; });
+}
 
 // ===== 5. 장부(etcd) 표 =====
 
@@ -622,8 +669,7 @@ const RUN = [
     await doze();
   },
   async () => { // 6. 자리 배치
-    const occ = ROOM_X.map((_, n) => S.pods.filter((p) => p.node === n && (p.state === 'run' || p.state === 'term')).length);
-    const free = occ.map((c) => 2 - c);
+    const free = ROOM_X.map((_, n) => 2 - occ(n));
     const best = Math.max(...free);
     const cand = free.map((f, n) => (f === best && f > 0 ? n : -1)).filter((n) => n >= 0);
     const target = cand[Math.floor(Math.random() * cand.length)];
@@ -639,7 +685,7 @@ const RUN = [
     await receive(false);
     const f = S.fresh;
     f.node = target;
-    f.desk = [0, 1].find((d) => !S.pods.some((p) => p !== f && p.node === target && p.desk === d && (p.state === 'run' || p.state === 'term')));
+    f.desk = freeDesks(target, f)[0];
     S.target = target;
     await record(() => { const e = entry(f.id); e.node = target; e.st = 'crt'; return f.id; });
     await broadcast([P.kub(target)]);
@@ -672,36 +718,265 @@ const RUN = [
   },
 ];
 
+const SCENE1 = {
+  clickPods: true,
+  sub: { m: '정원: 3명 · 장부는 창구직원만 씀', t: 'ReplicaSet replicas: 3 · etcd는 apiserver만 씀' },
+  init() { addPod(0, 0); addPod(0, 1); addPod(1, 0); },
+  steps: () => STEPS,
+  run: RUN,
+};
+
+// ===== 7-2. 장면 ② 신입 자리 배치 (대본) =====
+
+const URL_SCHED = 'https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/';
+const CHOICES2 = [
+  { m: '보통 신입 · 1칸', t: 'requests cpu 1', req: { size: 1, win: false, tol: false } },
+  { m: '큰 업무 신입 · 2칸', t: 'requests cpu 2', req: { size: 2, win: false, tol: false } },
+  { m: '창가 희망 신입', t: 'nodeSelector window=yes', req: { size: 1, win: true, tol: false } },
+  { m: '공사 허가증 신입', t: 'toleration repair', req: { size: 1, win: false, tol: true } },
+  { m: '창가 희망 · 2칸', t: 'nodeSelector + cpu 2', req: { size: 2, win: true, tol: false } },
+];
+const WHY = {
+  taint: { m: '✗ 공사 중', t: '✗ taint 미허용' },
+  win:   { m: '✗ 창가 아님', t: '✗ 라벨 불일치' },
+  size:  { m: '✗ 칸 부족', t: '✗ 자원 부족' },
+};
+
+// 거르기(필터) → 점수(남는 칸) → 최고점, 동점이면 무작위
+function plan2(req) {
+  const rooms = ROOM_X.map((_, n) => {
+    const r = S.rooms[n], free = 2 - occ(n);
+    const why = r.taint && !req.tol ? 'taint' : req.win && !r.win ? 'win' : free < req.size ? 'size' : null;
+    return { n, why, tolPass: r.taint && req.tol, score: why ? null : free - req.size };
+  });
+  const cands = rooms.filter((r) => !r.why);
+  const best = Math.max(...cands.map((r) => r.score));
+  const top = cands.filter((r) => r.score === best);
+  return { req, rooms, cands, target: top.length ? top[Math.floor(Math.random() * top.length)].n : null };
+}
+
+function steps2() {
+  const pl = S.plan, ok = !pl || pl.cands.length > 0, tol = pl && pl.req.tol;
+  const head = [
+    {
+      m: ['신입 1명이 들어올 예정임. 층마다 사정이 다름.', '아래에서 신입을 고르면 자리 배치가 시작됨.'],
+      t: ['Pod 1개가 새로 생길 예정임. 노드마다 라벨·taint·여유가 다름.', '아래에서 Pod 조건을 고르면 스케줄링이 시작됨.'],
+      ref: 'kube-scheduler는 노드가 정해지지 않은 Pod를 찾아 실행할 노드를 정함. 이 장면의 층 사정: 1층 = 창가, 2층 = 일반, 3층 = 창가 + 공사 중. 층마다 책상 2칸.',
+      url: URL_SCHED,
+    },
+    {
+      m: ['정원 담당의 요청으로 신입이 장부에 \'자리 미정\'으로 올라옴.', '신입은 로비에서 대기함. 방송을 들은 자리배치 담당이 일을 시작함.'],
+      t: ['Pod가 nodeName 없이 저장됨(Pending).', 'kube-scheduler가 watch로 감지해 스케줄링 큐에 넣음.'],
+      clock: C1,
+      ref: '스케줄러는 nodeName이 빈 Pod를 watch하다가 큐에 넣고 하나씩 처리함. 로비 = 아직 어느 노드에도 없는 Pod.',
+      url: URL_SCHED,
+    },
+    {
+      m: ['1단계 거르기: 조건이 안 맞는 층을 뺌.', '공사 중(허가증 없음) · 창가 아님 · 칸 부족이면 탈락.'],
+      t: ['필터링: Pod를 놓을 수 없는 노드를 뺌.', 'taint 미허용 · 라벨 불일치 · 자원 부족이면 제외.'],
+      clock: C1,
+      ref: '필터 플러그인 예: TaintToleration(taint를 허용하나), NodeAffinity(nodeSelector 라벨이 맞나), NodeResourcesFit(requests만큼 남았나). 칸은 실제 사용량이 아니라 requests 합계로 셈. 하나라도 실패하면 그 노드는 후보에서 빠짐.',
+      url: 'https://kubernetes.io/docs/reference/scheduling/config/#scheduling-plugins',
+    },
+  ];
+  if (!ok) {
+    return [...head,
+      {
+        m: ['남은 층이 없음 → 배치할 수 없음.', '신입은 \'자리 미정\' 그대로 로비에서 대기함.'],
+        t: ['후보 노드가 0개 → 스케줄링 실패.', 'Pod는 Pending으로 남고 FailedScheduling 이벤트가 기록됨.'],
+        ref: '배치할 노드가 없으면 Pod는 Pending(unschedulable)으로 남음. kubectl describe pod의 Events에 FailedScheduling과 탈락 이유가 나옴.',
+        url: URL_SCHED,
+      },
+      {
+        m: ['층 사정이 바뀌면(자리가 나거나 공사가 끝나면) 다시 시도함.', '다른 신입을 골라 다시 해 볼 수 있음.'],
+        t: ['클러스터 상태가 바뀌면 스케줄러가 다시 시도함.', '다른 조건을 골라 다시 해 볼 수 있음.'],
+        ref: '스케줄하지 못한 Pod는 대기열에 있다가, 노드 추가·Pod 삭제 같은 변화가 생기면 다시 시도됨.',
+        url: URL_SCHED,
+      },
+    ];
+  }
+  return [...head,
+    {
+      m: ['2단계 점수: 남은 층에 점수를 매기고 가장 높은 층을 고름.', '배치 후 남는 칸이 많을수록 높음. 같으면 무작위.',
+        ...(tol ? ['허가증은 들어가게 해 줄 뿐, 그 층으로 보내 주지 않음.'] : [])],
+      t: ['스코어링: 남은 노드에 점수를 매겨 최고점을 고름.', '여유가 많을수록 높음(단순화). 동점이면 무작위.',
+        ...(tol ? ['toleration은 허용만 할 뿐, 그 노드로 끌어당기지 않음.'] : [])],
+      clock: C1,
+      ref: '기본 점수는 여러 플러그인(자원 여유, 분산, 이미지 보유 등)의 합임. 이 시뮬레이터는 "배치 후 남는 칸"(NodeResourcesFit의 기본 방식 LeastAllocated와 같은 방향)으로 단순화함. 동점이면 무작위. toleration은 taint가 있는 노드를 허용할 뿐, 그 노드에 배치되는 것을 보장하지 않음.',
+      url: tol ? 'https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/' : URL_SCHED,
+    },
+    {
+      m: ['자리배치 담당이 배정 결과를 창구에 냄.', '장부에 층이 적힘(바인딩). 자리배치 담당은 여기까지만 함.'],
+      t: ['Binding 요청으로 Pod의 nodeName이 기록됨.', '스케줄러의 일은 여기까지임 — 실행은 하지 않음.'],
+      clock: C1,
+      ref: '스케줄러는 고른 노드를 API 서버에 Binding으로 알림. 이 과정을 바인딩이라 함. 컨테이너 실행은 그 노드의 kubelet이 함.',
+      url: URL_SCHED,
+    },
+    {
+      m: ['층 관리자가 방송을 듣고 신입을 자리에 앉힘. 장부에 \'근무\'로 적힘.', '배정(자리배치 담당)과 앉히기(층 관리자)는 다른 사람이 함.', '다른 신입을 골라 다시 해 볼 수 있음.'],
+      t: ['해당 노드의 kubelet이 컨테이너를 띄우고 Running을 보고함.', '배정(scheduler)과 실행(kubelet)은 다른 구성요소가 함.', '다른 조건을 골라 다시 해 볼 수 있음.'],
+      clock: '실제 수 초 (이미지 받기에 따라 다름)',
+      ref: 'kubelet은 자기 노드에 배정된 Pod를 watch하다가 컨테이너 런타임(CRI)으로 컨테이너를 실행하고, 상태를 apiserver에 보고함.',
+      url: 'https://kubernetes.io/docs/concepts/overview/components/#kubelet',
+    },
+  ];
+}
+
+const LOBBY = { x: 200, feet: 58 };
+
+function showFilter(r) {
+  const x = ROOM_X[r.n] + 38;
+  if (r.why) bubble(x, 106, WHY[r.why], Infinity, 'no');
+  else bubble(x, 106, r.tolPass ? { m: '✓ 허가증 있음', t: '✓ toleration' } : { m: '✓ 통과', t: '✓ 통과' }, Infinity, 'ok');
+}
+const showPick = () => bubble(ROOM_X[S.plan.target] + 38, 92, { m: '✓ 배정', t: '✓ 선택' }, Infinity, 'ok');
+
+const RUN2 = [
+  null,
+  async () => { // 1. 장부에 '자리 미정' 신입 → 로비 대기
+    await hop(S.A.rs);
+    await fly(P.rs(), P.api(), 900);
+    await receive(false);
+    const f = addPod(null, null);
+    Object.assign(f, { size: S.plan.req.size, x: LOBBY.x, feet: LOBBY.feet, dir: 'l', state: 'lobby', alpha: 0 });
+    S.fresh = f;
+    await record(() => { S.ledger.push({ id: f.id, node: null, st: 'pend' }); return f.id; });
+    await tween(300, (p) => { f.alpha = p; });
+    bubble(LOBBY.x + 6, 31, S.plan.choice, Infinity, '', true);
+    await broadcast([P.sch()]);
+    await doze();
+  },
+  async () => { // 2. 거르기
+    await hop(S.A.sch);
+    for (const r of S.plan.rooms) { showFilter(r); await wait(450); }
+    await wait(300);
+  },
+  async () => { // 3. 점수 (또는 후보 없음)
+    const pl = S.plan;
+    pl.rooms.filter((r) => r.why).forEach(showFilter);
+    if (!pl.cands.length) {
+      await wait(400);
+      bubble(S.A.sch.x + 18, 26, { m: '배치할 층 없음', t: '후보 노드 0개' }, Infinity, 'no');
+      await hop(S.A.sch);
+      await wait(400);
+      return;
+    }
+    for (const r of pl.cands) {
+      bubble(ROOM_X[r.n] + 38, 106, { m: `남는 칸 ${r.score}`, t: `점수 ${r.score}` });
+      await wait(400);
+    }
+    await wait(300);
+    showPick();
+    await hop(S.A.sch);
+    await wait(400);
+  },
+  async () => { // 4. 바인딩 (또는 대기)
+    const pl = S.plan, f = S.fresh;
+    pl.rooms.filter((r) => r.why).forEach(showFilter);
+    if (!pl.cands.length) {
+      await wait(400);
+      bubble(S.A.sch.x + 18, 26, { m: '자리 나면 다시 시도', t: 'FailedScheduling' }, Infinity, 'no');
+      await wait(400);
+      return;
+    }
+    showPick();
+    await hop(S.A.sch);
+    await fly(P.sch(), P.api(), 900);
+    await receive(false);
+    const fd = freeDesks(pl.target, f);
+    Object.assign(f, { node: pl.target, desk: fd[0], desk2: f.size === 2 ? fd[1] : null });
+    await record(() => { const e = entry(f.id); e.node = pl.target; e.st = 'crt'; return f.id; });
+    await broadcast([P.kub(pl.target)]);
+    await doze();
+  },
+  async () => { // 5. 층 관리자가 앉힘 → 근무 보고
+    const f = S.fresh, n = S.plan.target;
+    showPick();
+    await hop(S.kub[n]);
+    await tween(300, (p) => { f.alpha = 1 - p; });
+    Object.assign(f, { x: ROOM_X[n] + 62, feet: DESK_FEET, state: 'run', alpha: 1 });
+    await walk(f, deskX(n, f.desk), 1200);
+    f.dir = 'r';
+    await wait(200);
+    await fly(P.kub(n), P.api(), 1000);
+    await receive(false);
+    await record(() => { entry(f.id).st = 'run'; return f.id; });
+    await doze();
+  },
+];
+
+const SCENE2 = {
+  clickPods: false,
+  sub: { m: '장부는 창구직원만 씀', t: 'etcd는 apiserver만 씀' },
+  choices: CHOICES2,
+  init() {
+    S.rooms[0].win = true;
+    S.rooms[2].win = true; S.rooms[2].taint = true;
+    addPod(0, 0);
+  },
+  steps: steps2,
+  run: RUN2,
+};
+
+let SC = SCENE1;
+
 // ===== 8. 진행 =====
 
 let cur = 0, busy = false;
 const $ = (id) => document.getElementById(id);
 
 function say(i) {
-  const s = STEPS[i];
+  const steps = SC.steps(), s = steps[i];
   $('lines').innerHTML = '';
   s[MODE].forEach((line) => { const p = document.createElement('p'); p.textContent = line; $('lines').appendChild(p); });
   $('clock').textContent = s.clock ? `⏱ ${s.clock}` : '';
   $('refText').textContent = s.ref;
   $('refLink').href = s.url;
   $('refLink').textContent = s.url.replace('https://', '');
-  $('count').textContent = i === 0 ? '' : `${i} / ${STEPS.length - 1}`;
+  $('count').textContent = i === 0 ? '' : `${i} / ${steps.length - 1}`;
 }
 
+const lastStep = () => SC.steps().length - 1;
+
 function updBtns() {
-  $('next').disabled = busy || cur === 0 || cur >= STEPS.length - 1;
+  $('next').disabled = busy || cur === 0 || cur >= lastStep();
+}
+
+// 장면 ② 처럼 고르는 장면: 기다리는 동안 선택 칩을 보여 준다
+function renderChoices() {
+  const box = $('choices');
+  box.innerHTML = '';
+  if (!SC.choices || S.phase !== 'idle') return;
+  SC.choices.forEach((c) => {
+    const b = document.createElement('button');
+    b.dataset.m = c.m; b.dataset.t = c.t;
+    b.textContent = L(c);
+    b.addEventListener('click', () => choose(c));
+    box.appendChild(b);
+  });
+}
+
+function choose(c) {
+  if (S.phase !== 'idle') return;
+  if (S.used) reset();
+  S.used = true;
+  S.plan = plan2(c.req);
+  S.plan.choice = { m: c.m, t: c.t };
+  S.phase = 'run';
+  renderChoices();
+  runStep(1);
 }
 
 async function runStep(i) {
   const g = gen;
   cur = i;
   say(i);
-  if (i !== 8) clearBubbles();
+  clearBubbles();
   busy = true; updBtns();
-  await RUN[i]();
+  await SC.run[i]();
   if (g !== gen) return;
   busy = false;
-  if (i === STEPS.length - 1) { S.phase = 'idle'; updBtns(); return; }
+  if (i === lastStep()) { S.phase = 'idle'; updBtns(); renderChoices(); return; }
   updBtns();
   if ($('auto').checked) {
     await wait(1500);
@@ -709,20 +984,24 @@ async function runStep(i) {
   }
 }
 
-function next() { if (!busy && cur >= 1 && cur < STEPS.length - 1) runStep(cur + 1); }
+function next() { if (!busy && cur >= 1 && cur < lastStep()) runStep(cur + 1); }
 
 function reset() {
   gen++;
   tweens.length = 0;
-  clearBubbles();
+  clearBubbles(true);
   podTags.forEach((el) => el.remove()); podTags.clear();
   initState();
+  refreshRoomTags();
+  Object.assign($('lrs').dataset, SC.sub);
+  $('lrs').textContent = L(SC.sub);
   renderLedger();
   cur = 0; busy = false;
-  say(0); updBtns();
+  say(0); updBtns(); renderChoices();
 }
 
 function podAt(x, y) {
+  if (!SC.clickPods) return null;
   return S.pods.find((p) => p.state === 'run' && x >= p.x && x < p.x + 12 && y >= p.feet - 17 && y <= p.feet);
 }
 function toCanvas(e) { return [(e.offsetX / cv.clientWidth) * W, (e.offsetY / cv.clientHeight) * H]; }
@@ -755,21 +1034,29 @@ function setMode(m) {
 document.querySelectorAll('#mode button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
 const SCENES = [
-  { m: '① 퇴사 → 재채용', t: '① Pod 삭제 → 재생성', on: true },
-  { m: '② 신입 자리 배치', t: '② 스케줄링' },
+  { m: '① 퇴사 → 재채용', t: '① Pod 삭제 → 재생성', sc: SCENE1 },
+  { m: '② 신입 자리 배치', t: '② 스케줄링', sc: SCENE2 },
   { m: '③ 채용 요청서 따라가기', t: '③ apply → Pod 실행' },
   { m: '④ 층 정전', t: '④ 노드 장애' },
   { m: '⑤ 책상 크기 초과', t: '⑤ limits · OOMKilled' },
   { m: '⑥ 업무 매뉴얼 개정', t: '⑥ 롤링 업데이트' },
   { m: '⑦ 대표번호 연결', t: '⑦ Service' },
 ];
+function switchScene(sc) {
+  SC = sc;
+  SCENES.forEach((s) => s.btn.classList.toggle('on', s.sc === sc));
+  reset();
+}
 SCENES.forEach((s) => {
   const b = document.createElement('button');
   b.dataset.m = s.m; b.dataset.t = s.t;
   b.textContent = s.m;
-  if (s.on) b.className = 'on'; else { b.disabled = true; b.title = '준비 중'; }
+  s.btn = b;
+  if (s.sc) b.addEventListener('click', () => { if (SC !== s.sc) switchScene(s.sc); });
+  else { b.disabled = true; b.title = '준비 중'; }
   $('scenes').appendChild(b);
 });
+SCENES[0].btn.classList.add('on');
 
 // ===== 10. 루프 =====
 
@@ -791,7 +1078,10 @@ reset();
 setMode('m');
 requestAnimationFrame(frame);
 
-window.sim = { get S() { return S; }, STEPS, setMode, next, reset, clickPod, get cur() { return cur; }, get busy() { return busy; } };
+window.sim = {
+  get S() { return S; }, setMode, next, reset, clickPod, choose, CHOICES2,
+  scene: (i) => switchScene(SCENES[i - 1].sc), get cur() { return cur; }, get busy() { return busy; },
+};
 </script>
 </body>
 </html>
