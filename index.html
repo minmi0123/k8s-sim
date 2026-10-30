@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>쿠버네티스 회사 — 장면으로 보는 k8s</title>
+<style>
+  :root { --ink: #3d2c3a; --paper: #fbf6ea; --accent: #e8734a; --ok: #4f9a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #efe6d2; color: var(--ink); font-family: "Pretendard", "Malgun Gothic", sans-serif; }
+  .wrap { max-width: 1030px; margin: 0 auto; padding: 12px; }
+  header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  h1 { font-size: 17px; margin: 0 6px 0 0; }
+  .scenes { display: flex; gap: 4px; flex-wrap: wrap; }
+  .scenes button { font: inherit; font-size: 12px; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); }
+  .scenes button.on { background: var(--ink); color: #fff; }
+  .scenes button:disabled { opacity: .35; }
+  .mode { margin-left: auto; display: flex; border: 2px solid var(--ink); border-radius: 6px; overflow: hidden; }
+  .mode button { border: 0; background: #fff; color: var(--ink); padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .mode button.on { background: var(--ink); color: #fff; }
+  .stage { position: relative; width: 100%; border: 3px solid var(--ink); border-radius: 4px; line-height: 0; }
+  canvas { display: block; width: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .tag, .bub { position: absolute; transform: translate(-50%, -100%); line-height: 1.25; white-space: nowrap; pointer-events: none; }
+  .tag { font-size: 11px; padding: 1px 4px; background: rgba(255, 255, 255, .88); border: 1px solid var(--ink); border-radius: 3px; }
+  .tag.room { font-weight: bold; background: rgba(255, 248, 230, .9); }
+  .tag.pod { font-size: 10px; padding: 0 3px; border-color: #8a7a6a; }
+  .bub { font-size: 12px; padding: 2px 6px; background: #fff3d6; border: 2px solid var(--accent); border-radius: 6px; font-weight: bold; animation: pop .25s ease-out; }
+  .bub.ok { border-color: var(--ok); background: #e9f6ee; }
+  .bub.no { border-color: #b8b0a8; background: #f2eeea; color: #8a7f78; }
+  @keyframes pop { from { transform: translate(-50%, -80%) scale(.6); opacity: 0; } }
+  .panel { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .say { flex: 1 1 440px; background: var(--paper); border: 2px solid var(--ink); border-radius: 6px; padding: 8px 12px; min-height: 92px; }
+  .say p { margin: 3px 0; font-size: 15px; }
+  .meta { display: flex; gap: 10px; align-items: center; margin-top: 6px; font-size: 12px; color: #7a6a6a; flex-wrap: wrap; }
+  .meta details { font-size: 12px; }
+  .meta summary { cursor: pointer; }
+  .meta details p { margin: 4px 0; max-width: 560px; color: var(--ink); }
+  .ledger { flex: 0 1 330px; background: #fffdf5; border: 2px solid var(--ink); border-radius: 6px; padding: 8px 10px; font-size: 13px; }
+  .ledger .lh { font-weight: bold; margin-bottom: 2px; }
+  .ledger .lrs { font-size: 12px; color: #7a6a6a; margin-bottom: 4px; }
+  .ledger table { width: 100%; border-collapse: collapse; }
+  .ledger th, .ledger td { text-align: left; padding: 2px 4px; border-bottom: 1px dashed #d9cdb4; font-size: 12px; }
+  .ledger tr.flash td { animation: flash 1.4s ease-out; }
+  @keyframes flash { from { background: #ffe27a; } }
+  .ctrl { display: flex; gap: 6px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .ctrl button { font: inherit; font-size: 14px; padding: 6px 14px; border: 2px solid var(--ink); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
+  .ctrl button.main { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: bold; }
+  .ctrl button:disabled { opacity: .35; cursor: default; }
+  .ctrl label { font-size: 13px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .ctrl .count { margin-left: auto; font-size: 12px; color: #7a6a6a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>쿠버네티스 회사</h1>
+    <div class="scenes" id="scenes"></div>
+    <div class="mode" id="mode">
+      <button data-mode="m" class="on">비유</button>
+      <button data-mode="t">용어</button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage"><canvas id="cv" width="256" height="144"></canvas></div>
+
+  <div class="ctrl">
+    <button id="reset">처음부터</button>
+    <button id="next" class="main">다음 ▶</button>
+    <label><input type="checkbox" id="auto"> 자동 재생</label>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="panel">
+    <div class="say">
+      <div id="lines"></div>
+      <div class="meta">
+        <span id="clock"></span>
+        <details id="ref"><summary>근거</summary><p id="refText"></p><p><a id="refLink" target="_blank" rel="noopener"></a></p></details>
+      </div>
+    </div>
+    <div class="ledger">
+      <div class="lh" data-m="장부" data-t="etcd"></div>
+      <div class="lrs" data-m="정원: 3명 · 장부는 창구직원만 씀" data-t="ReplicaSet replicas: 3 · etcd는 apiserver만 씀"></div>
+      <table><thead><tr><th data-m="이름" data-t="NAME"></th><th data-m="층" data-t="NODE"></th><th data-m="상태" data-t="STATUS"></th></tr></thead><tbody id="lt"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ===== 1. 도트 (dev-guide 도트.md 방식: 글자 1개 = 픽셀 1개) =====
+
+const W = 256, H = 144;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+const PALETTE = {
+  o: '#3d2c3a', // 외곽선
+  h: '#5a3a2a', // 머리카락
+  s: '#f6cfae', // 피부
+  c: '#f2a0a0', // 볼
+  e: '#3d2c3a', // 눈
+  m: '#c9645a', // 입
+  t: '#8fb8e8', // 윗옷
+  p: '#5a6a9a', // 바지
+  b: '#5a4636', // 신발
+  w: '#fffdf5', // 종이
+  k: '#c4905a', // 나무
+  i: '#e8434a', // 빨강 (느낌표·화살표)
+};
+
+function makeSprite(rows, colors = {}, flip = false) {
+  const pal = { ...PALETTE, ...colors };
+  const w = rows[0].length;
+  rows.forEach((r, i) => { if (r.length !== w) console.warn('도트 줄 길이 다름', i, r); });
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = rows.length;
+  const g = c.getContext('2d');
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === '.' || !pal[ch]) return;
+    g.fillStyle = pal[ch];
+    g.fillRect(flip ? w - 1 - x : x, y, 1, 1);
+  }));
+  return c;
+}
+
+// 사람 12x17 (머리·몸 15줄 + 다리 2줄)
+const TOP = [
+  '...oooooo...',
+  '..ohhhhhho..',
+  '.ohhhhhhhho.',
+  '.ohhsssshho.',
+  '.osssssssso.',
+  '.osesssseso.',
+  '.osesssseso.',
+  '.ocssmmssco.',
+  '..osssssso..',
+  '...oottoo...',
+  '..otttttto..',
+  '.otttttttto.',
+  '.osttttttso.',
+  '.osttttttso.',
+  '..oppppppo..',
+];
+// 조는 얼굴: 눈을 가로 줄로
+const SLEEP_TOP = TOP.map((r, i) => (i === 5 ? '.osssssssso.' : i === 6 ? '.osossssoso.' : r));
+const LEGS = {
+  stand: ['...op..po...', '...ob..bo...'],
+  a:     ['..op....po..', '..ob....bo..'],
+  b:     ['....oppo....', '....obbo....'],
+};
+
+function makePerson(colors, top = TOP) {
+  const frames = (flip) => ({
+    stand: makeSprite([...top, ...LEGS.stand], colors, flip),
+    walk: [makeSprite([...top, ...LEGS.a], colors, flip), makeSprite([...top, ...LEGS.b], colors, flip)],
+  });
+  return { right: frames(false), left: frames(true) };
+}
+
+const LOOKS = {
+  me:  { h: '#2f2a3a', t: '#f5b93a', p: '#46598f' },
+  api: { h: '#7a4a2e', t: '#e8734a', p: '#5a4a6a' },
+  rs:  { h: '#3a2a22', t: '#7cc27e', p: '#4f6a5a' },
+  sch: { h: '#c9645a', t: '#c9a0e8', p: '#5a4a7a' },
+  kub: { h: '#f5b93a', t: '#46598f', p: '#3d4a6a' }, // 노란 머리 = 안전모
+  emp: [
+    { h: '#5a3a2a', t: '#8fb8e8' }, { h: '#3a2a22', t: '#f29a9a' }, { h: '#a8693f', t: '#ffe27a' },
+    { h: '#2f2a3a', t: '#9fd6c8' }, { h: '#7a4a2e', t: '#f7b6c8' }, { h: '#4a3428', t: '#c9c6d6' },
+  ],
+};
+
+const SPR = {
+  me: makePerson(LOOKS.me),
+  api: makePerson(LOOKS.api),
+  apiSleep: makePerson(LOOKS.api, SLEEP_TOP),
+  rs: makePerson(LOOKS.rs),
+  sch: makePerson(LOOKS.sch),
+  kub: makePerson(LOOKS.kub),
+  emp: LOOKS.emp.map((l) => makePerson(l)),
+  desk: makeSprite([
+    'oooooooooooooooo',
+    'okkkkkkkkkkkkkko',
+    'oooooooooooooooo',
+    '.oko........oko.',
+    '.oko........oko.',
+    '.ooo........ooo.',
+  ]),
+  env: makeSprite(['oooooo', 'oowwoo', 'owoowo', 'owwwwo', 'oooooo']),
+  bang: makeSprite(['.ooo.', 'owiwo', 'owiwo', 'owwwo', 'owiwo', '.ooo.', '..o..']),
+  zz: makeSprite(['ooooo', '...o.', '..o..', '.o...', 'ooooo']),
+  arrow: makeSprite(['iiiii', '.iii.', '..i..']),
+};
+
+function rect(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(Math.round(x), Math.round(y), w, h);
+}
+
+function drawPerson(set, x, feet, { walking = false, dir = 'r', alpha = 1 } = {}) {
+  const fr = set[dir === 'l' ? 'left' : 'right'];
+  const img = walking ? fr.walk[Math.floor(T / 8) % 2] : fr.stand;
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(img, Math.round(x), Math.round(feet - img.height + 1));
+  ctx.globalAlpha = 1;
+}
+
+// ===== 2. 무대 (회사) =====
+
+const ROOM_X = [8, 90, 172];      // 층(노드) 3개
+const DESK_DX = [14, 38];         // 층마다 책상 2개 = 노드 용량
+const DESK_FEET = 124;
+const ROOMS = [
+  { m: '1층', t: 'node-1' }, { m: '2층', t: 'node-2' }, { m: '3층', t: 'node-3' },
+];
+const NAMES = ['민지', '준호', '서연', '도윤', '하은', '지호', '수아', '예준', '지우', '시우', '유나', '건우'];
+const RS_NAME = 'web-6d4f9c7b8';
+
+let MODE = 'm';
+const L = (o) => (o == null ? '' : typeof o === 'string' ? o : o[MODE]);
+
+let S;      // 장면 상태
+let gen = 0; // 처음부터를 누르면 올라감 → 진행 중이던 연출은 버려진다
+
+function initState() {
+  S = {
+    A: {
+      me:  { x: 226, feet: 58, dy: 0 },
+      sch: { x: 12, feet: 58, dy: 0 },
+      rs:  { x: 50, feet: 58, dy: 0 },
+    },
+    kub: ROOM_X.map((x0) => ({ x: x0 + 1, feet: 137, dy: 0 })),
+    apiAwake: false,
+    drawer: 0,
+    pods: [], ledger: [], envs: [], rings: [], bangs: [],
+    phase: 'idle', victim: null, fresh: null, target: null,
+  };
+  addPod(0, 0); addPod(0, 1); addPod(1, 0);
+  S.pods.forEach((p) => { p.state = 'run'; S.ledger.push({ id: p.id, node: p.node, st: 'run' }); });
+}
+
+let podSeq = 0;
+function addPod(node, desk) {
+  const used = new Set(S.pods.map((p) => p.mn));
+  const free = NAMES.filter((n) => !used.has(n));
+  const mn = free[Math.floor(Math.random() * free.length)];
+  const sfx = Array.from({ length: 5 }, () => 'bcdfghjklmnpqrstvwxz2456789'[Math.floor(Math.random() * 27)]).join('');
+  const p = {
+    id: ++podSeq, mn, tn: `${RS_NAME}-${sfx}`, sfx, look: podSeq % LOOKS.emp.length,
+    node, desk, x: deskX(node, desk), feet: DESK_FEET, state: 'none', alpha: 1, box: false, walking: false, dir: 'r',
+  };
+  S.pods.push(p);
+  return p;
+}
+const deskX = (n, d) => ROOM_X[n] + DESK_DX[d] + 2;
+
+const P = {
+  me: () => [S.A.me.x + 6, S.A.me.feet - 20],
+  rs: () => [S.A.rs.x + 6, S.A.rs.feet - 20],
+  sch: () => [S.A.sch.x + 6, S.A.sch.feet - 20],
+  api: () => [126, 42],
+  kub: (n) => [S.kub[n].x + 6, S.kub[n].feet - 20],
+  drawer: () => [161, 41],
+};
+
+// ===== 3. 그리기 =====
+
+function drawBG() {
+  const o = PALETTE.o;
+  rect(0, 0, W, 62, '#f3e6c8');               // 본사(컨트롤 플레인) 벽
+  rect(0, 50, W, 12, '#e2cfa6');              // 본사 바닥
+  rect(0, 50, W, 1, '#cdb68a');
+  [[72, 8], [192, 8]].forEach(([x, y]) => {   // 창문
+    rect(x - 1, y - 1, 22, 16, o); rect(x, y, 20, 14, '#bfe3f2');
+    rect(x + 9, y, 2, 14, o); rect(x, y + 6, 20, 2, o);
+  });
+  rect(243, 25, 13, 34, o); rect(244, 26, 12, 33, '#a8693f'); rect(246, 42, 2, 2, '#f5b93a'); // 나 옆 문
+  rect(0, 62, W, 6, '#b9a07a'); rect(0, 62, W, 1, o);
+  rect(0, 68, W, H - 68, '#cdb68a');
+  ROOM_X.forEach((x0) => {                    // 층(노드)
+    rect(x0 - 1, 69, 78, 73, o); rect(x0, 70, 76, 71, '#efe2c6');
+    rect(x0, 116, 76, 25, '#d8c099'); rect(x0, 116, 76, 1, '#c4a878');
+    rect(x0 + 65, 95, 10, 21, o); rect(x0 + 66, 96, 8, 20, '#a8693f'); rect(x0 + 67, 105, 1, 2, '#f5b93a');
+  });
+}
+
+function drawCounter() {
+  rect(103, 48, 48, 13, PALETTE.o);
+  rect(104, 49, 46, 3, '#b07a5c');
+  rect(104, 52, 46, 8, '#d9a877');
+  rect(140, 46, 5, 2, PALETTE.o); rect(141, 45, 3, 1, '#f5b93a'); // 호출벨
+}
+
+function drawCabinet() {
+  const o = PALETTE.o, x = 158, y = 30, w = 15;
+  rect(x - 1, y - 1, w + 2, 31, o); rect(x, y, w, 29, '#c9c6d6');
+  for (let i = 0; i < 3; i++) {
+    const dy = y + 1 + i * 9;
+    const out = S.drawer && i === 1 ? -5 : 0;   // 기록할 때 가운데 서랍이 열린다
+    rect(x + 1 + out, dy, w - 2, 8, o); rect(x + 2 + out, dy + 1, w - 4, 6, '#e4e1ec');
+    rect(x + 6 + out, dy + 3, 3, 1, o);
+    if (out) { rect(x - 3, dy - 2, 5, 3, o); rect(x - 2, dy - 1, 3, 2, '#fffdf5'); }
+  }
+}
+
+function drawRing(r) {
+  ctx.globalAlpha = r.a;
+  ctx.fillStyle = PALETTE.i;
+  for (let a = 0; a < Math.PI * 2; a += 0.04) {
+    ctx.fillRect(Math.round(126 + Math.cos(a) * r.r), Math.round(40 + Math.sin(a) * r.r * 0.75), 1, 1);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function draw() {
+  drawBG();
+
+  // 본사: 자리배치 담당 · 정원 담당 · 창구직원 · 장부 · 나
+  const { me, sch, rs } = S.A;
+  drawPerson(SPR.sch, sch.x, sch.feet + sch.dy);
+  drawPerson(SPR.rs, rs.x, rs.feet + rs.dy);
+  ctx.drawImage(SPR.desk, sch.x - 2, 51);
+  ctx.drawImage(SPR.desk, rs.x - 2, 51);
+  drawPerson(S.apiAwake ? SPR.api : SPR.apiSleep, 120, S.apiAwake ? 53 : 58);
+  drawCounter();
+  drawCabinet();
+  drawPerson(SPR.me, me.x, me.feet + me.dy, { dir: 'l' });
+
+  // 층: 직원(책상 뒤) → 책상 → 층 관리자
+  S.pods.forEach((p) => {
+    if (p.state === 'none' || p.state === 'gone') return;
+    const shake = p.box && !p.walking && T % 24 < 12 ? 1 : 0;
+    drawPerson(SPR.emp[p.look], p.x + shake, p.feet, { walking: p.walking, dir: p.dir, alpha: p.alpha });
+  });
+  ROOM_X.forEach((x0) => DESK_DX.forEach((dx) => ctx.drawImage(SPR.desk, x0 + dx, 119)));
+  S.pods.forEach((p) => {           // 짐 상자는 책상보다 앞에 (가려지지 않게)
+    if (!p.box || p.state === 'none' || p.state === 'gone') return;
+    const shake = !p.walking && T % 24 < 12 ? 1 : 0;
+    ctx.globalAlpha = p.alpha;
+    rect(p.x + 2 + shake, p.feet - 8, 9, 7, PALETTE.o); rect(p.x + 3 + shake, p.feet - 7, 7, 5, '#c4905a');
+    rect(p.x + 3 + shake, p.feet - 5, 7, 1, PALETTE.o);
+    ctx.globalAlpha = 1;
+  });
+  S.kub.forEach((k) => drawPerson(SPR.kub, k.x, k.feet + k.dy));
+
+  // 클릭할 수 있는 직원 표시
+  if (S.phase === 'idle') {
+    const bob = Math.floor(T / 15) % 2;
+    S.pods.filter((p) => p.state === 'run').forEach((p) => ctx.drawImage(SPR.arrow, p.x + 4, p.feet - 23 + bob));
+  }
+
+  // 조는 창구직원
+  if (!S.apiAwake) {
+    const k = (T % 90) / 90;
+    ctx.globalAlpha = 1 - k;
+    ctx.drawImage(SPR.zz, 133 + Math.round(k * 4), 38 - Math.round(k * 10));
+    ctx.globalAlpha = 1;
+  }
+
+  S.rings.forEach(drawRing);
+  S.envs.forEach((e) => ctx.drawImage(SPR.env, Math.round(e.x - 3), Math.round(e.y - 2)));
+  S.bangs.forEach((b) => ctx.drawImage(SPR.bang, Math.round(b.x - 2), Math.round(b.y - 14 - (Math.floor(T / 10) % 2))));
+}
+
+// ===== 4. 이름표 · 말풍선 (캔버스 밖 HTML — 한글은 캔버스에서 못 읽는다) =====
+
+const stage = document.getElementById('stage');
+const place = (el, x, y) => { el.style.left = `${(x / W) * 100}%`; el.style.top = `${(y / H) * 100}%`; };
+
+function makeTag(txt, cls = '') {
+  const d = document.createElement('div');
+  d.className = `tag ${cls}`;
+  d.dataset.m = txt.m; d.dataset.t = txt.t;
+  d.textContent = L(txt);
+  stage.appendChild(d);
+  return d;
+}
+
+const STATIC_TAGS = [
+  { txt: { m: '나(관리자)', t: 'kubectl' }, at: () => [S.A.me.x + 6, S.A.me.feet - 18] },
+  { txt: { m: '창구직원', t: 'kube-apiserver' }, at: () => [126, S.apiAwake ? 36 : 41] },
+  { txt: { m: '장부', t: 'etcd' }, at: () => [165, 28] },
+  { txt: { m: '정원 담당', t: 'ReplicaSet 컨트롤러' }, at: () => [S.A.rs.x + 6, S.A.rs.feet - 18] },
+  { txt: { m: '자리배치 담당', t: 'kube-scheduler' }, at: () => [S.A.sch.x + 10, S.A.sch.feet - 18] },
+  ...ROOM_X.map((x0, n) => ({ txt: ROOMS[n], at: () => [x0 + 10, 78], cls: 'room' })),
+  ...ROOM_X.map((x0, n) => ({ txt: { m: '층 관리자', t: 'kubelet' }, at: () => [S.kub[n].x + 7, S.kub[n].feet - 18] })),
+];
+STATIC_TAGS.forEach((s) => { s.el = makeTag(s.txt, s.cls); });
+
+const podTags = new Map();
+function updateTags() {
+  STATIC_TAGS.forEach((s) => { const [x, y] = s.at(); place(s.el, x, y); });
+  const alive = new Set();
+  S.pods.forEach((p) => {
+    if (p.state === 'none' || p.state === 'gone') return;
+    alive.add(p.id);
+    let el = podTags.get(p.id);
+    if (!el) { el = makeTag({ m: p.mn, t: `…${p.sfx}` }, 'pod'); podTags.set(p.id, el); }
+    el.style.opacity = p.alpha;
+    place(el, p.x + 6, p.feet + 8);   // 책상 아래 (머리 위는 클릭 화살표 자리)
+  });
+  podTags.forEach((el, id) => { if (!alive.has(id)) { el.remove(); podTags.delete(id); } });
+}
+
+let bubbles = [];
+function bubble(x, y, txt, ms = Infinity, cls = '') {
+  const d = document.createElement('div');
+  d.className = `bub ${cls}`;
+  d.dataset.m = txt.m; d.dataset.t = txt.t;
+  d.textContent = L(txt);
+  place(d, x, y);
+  stage.appendChild(d);
+  bubbles.push({ d, until: now + ms });
+}
+function clearBubbles() { bubbles.forEach((b) => b.d.remove()); bubbles = []; }
+
+// ===== 5. 장부(etcd) 표 =====
+
+const ST = {
+  run:  { m: '근무', t: 'Running' },
+  term: { m: '퇴사 예정', t: 'Terminating' },
+  pend: { m: '자리 미정', t: 'Pending' },
+  crt:  { m: '출근 준비', t: 'ContainerCreating' },
+};
+let flashId = null;
+function renderLedger() {
+  const tb = document.getElementById('lt');
+  tb.innerHTML = '';
+  S.ledger.forEach((e) => {
+    const p = S.pods.find((q) => q.id === e.id);
+    const tr = document.createElement('tr');
+    if (e.id === flashId) tr.className = 'flash';
+    const node = e.node == null ? { m: '-', t: '<none>' } : ROOMS[e.node];
+    [{ m: p.mn, t: p.tn }, node, ST[e.st]].forEach((c) => {
+      const td = document.createElement('td');
+      td.textContent = L(c);
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  flashId = null;
+}
+
+// ===== 6. 연출 도구 =====
+
+let now = performance.now(), T = 0;
+const tweens = [];
+function tween(ms, fn) { return new Promise((res) => tweens.push({ t0: now, ms, fn, res })); }
+const wait = (ms) => tween(ms, () => {});
+const ease = (p) => (p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2);
+
+async function fly(from, to, ms = 800) {
+  const e = { x: from[0], y: from[1] };
+  S.envs.push(e);
+  await tween(ms, (p) => {
+    const q = ease(p);
+    e.x = from[0] + (to[0] - from[0]) * q;
+    e.y = from[1] + (to[1] - from[1]) * q - Math.sin(Math.PI * p) * 10;
+  });
+  S.envs.splice(S.envs.indexOf(e), 1);
+}
+
+function hop(a) { return tween(320, (p) => { a.dy = -Math.round(Math.sin(Math.PI * p) * 3); }); }
+
+function bang(pos, ms = 1500) {
+  const b = { x: pos[0], y: pos[1] };
+  S.bangs.push(b);
+  wait(ms).then(() => { const i = S.bangs.indexOf(b); if (i >= 0) S.bangs.splice(i, 1); });
+}
+
+// 창구가 서류를 받는다: 벌떡 일어나 검사 도장
+async function receive(full) {
+  S.apiAwake = true;
+  await wait(250);
+  const items = full
+    ? [{ m: '신분 ✓', t: '인증 ✓' }, { m: '권한 ✓', t: '인가 ✓' }, { m: '양식 ✓', t: '어드미션 ✓' }]
+    : [{ m: '검사 ✓', t: '인증·인가·어드미션 ✓' }];
+  const xs = full ? [100, 126, 152] : [126];
+  for (let i = 0; i < items.length; i++) {
+    bubble(xs[i], 24, items[i], full ? 2600 : 1300, 'ok');
+    await wait(full ? 500 : 400);
+  }
+}
+
+// 장부에 적는다: 서랍이 열리고 표 줄이 반짝
+async function record(change) {
+  await fly([132, 42], P.drawer(), 450);
+  S.drawer = 1;
+  flashId = change();
+  renderLedger();
+  await wait(400);
+  S.drawer = 0;
+}
+
+// 장부가 바뀌었다고 방송(watch) → 듣는 사람 머리 위에 !
+async function broadcast(listeners) {
+  const r = { r: 4, a: 1 };
+  S.rings.push(r);
+  await tween(750, (p) => { r.r = 4 + p * 80; r.a = 1 - p; });
+  S.rings.splice(S.rings.indexOf(r), 1);
+  listeners.forEach((pos) => bang(pos));
+  await wait(500);
+}
+
+async function doze() { await wait(300); S.apiAwake = false; }
+
+async function walk(p, toX, ms) {
+  const x0 = p.x;
+  p.walking = true;
+  p.dir = toX < x0 ? 'l' : 'r';
+  await tween(ms, (q) => { p.x = x0 + (toX - x0) * q; });
+  p.walking = false;
+}
+
+// ===== 7. 장면 ① 퇴사 → 재채용 (대본) =====
+
+const C1 = '실제 1초 미만';
+const STEPS = [
+  {
+    m: ['정원 3명, 직원 3명이 근무 중임.', '직원 한 명을 클릭하면 퇴사 처리가 시작됨.'],
+    t: ['ReplicaSet replicas: 3, Pod 3개가 Running 상태임.', 'Pod를 클릭하면 삭제 요청이 시작됨.'],
+    ref: 'ReplicaSet은 정해진 개수의 Pod가 항상 실행되도록 유지함. 참고: 컨테이너가 죽었다가 다시 켜지는 것(재시작)은 Pod 교체가 아님 — 같은 Pod 안에서 kubelet이 다시 켬.',
+    url: 'https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/',
+  },
+  {
+    m: ['관리자가 창구에 퇴사 서류를 냄.', '서류는 무조건 창구로만 들어감.'],
+    t: ['kubectl delete pod 요청이 kube-apiserver로 감.', '모든 요청은 apiserver로만 들어감.'],
+    clock: C1,
+    ref: 'kube-apiserver는 컨트롤 플레인의 프런트엔드임. 다른 구성요소도 etcd에 직접 접근하지 않고 apiserver를 거침.',
+    url: 'https://kubernetes.io/docs/concepts/overview/components/',
+  },
+  {
+    m: ['창구직원이 일어나 신분·권한·양식을 검사함.', '검사만 하고, 무엇을 할지는 판단하지 않음.'],
+    t: ['인증 → 인가 → 어드미션 순서로 검사함.', 'apiserver는 검사·저장만 하고 결정하지 않음.'],
+    clock: C1,
+    ref: '요청은 인증(Authentication) → 인가(Authorization) → 어드미션 컨트롤(Admission Control)을 거친 뒤에 저장됨.',
+    url: 'https://kubernetes.io/docs/concepts/security/controlling-access/',
+  },
+  {
+    m: ['장부에 \'퇴사 예정\'을 적음. 장부는 창구직원만 씀.', '장부가 바뀌었다고 사내 방송을 함.'],
+    t: ['etcd에 deletionTimestamp가 기록됨. etcd는 apiserver만 씀.', 'watch 중인 구성요소에 변경 이벤트가 전달됨.'],
+    clock: C1,
+    ref: 'Pod 삭제 요청은 바로 지우지 않고 deletionTimestamp를 기록해 종료 중(Terminating) 상태로 만듦. 구성요소들은 폴링 대신 watch로 변경을 계속 받아 봄.',
+    url: 'https://kubernetes.io/docs/reference/using-api/api-concepts/#efficient-detection-of-changes',
+  },
+  {
+    m: ['층 관리자: 해당 직원의 퇴근 정리를 시작함.', '정원 담당: 퇴사 예정자를 빼고 셈 → 원함 3 / 실제 2.'],
+    t: ['kubelet: 컨테이너에 SIGTERM을 보냄.', 'ReplicaSet 컨트롤러: 종료 중인 Pod를 빼고 셈 → 3 / 2.'],
+    clock: '실제 정리 시간: 최대 30초 (기본값)',
+    ref: 'kubelet은 컨테이너에 TERM 신호를 보내고 유예 시간(기본 30초)을 기다림. ReplicaSet 컨트롤러는 deletionTimestamp가 있는 Pod를 실행 중 개수에서 뺌(컨트롤러 소스의 활성 Pod 필터 기준). 그래서 정리가 끝나기 전에 바로 새 Pod를 요청함.',
+    url: 'https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination',
+  },
+  {
+    m: ['정원 담당이 신입 1명 채용 요청서를 냄.', '창구가 검사 후 장부에 \'자리 미정\'으로 등록함.'],
+    t: ['컨트롤러가 Pod 템플릿으로 새 Pod 생성을 요청함.', 'etcd에 nodeName이 빈 Pending Pod가 저장됨.'],
+    clock: C1,
+    ref: '컨트롤러는 원하는 상태와 현재 상태를 비교해, apiserver에 요청을 보내 차이를 줄임. 조정 루프: 원하는 상태 읽기 → 실제 상태 보기 → 차이 계산 → 행동 → watch로 다음 변화 기다리기.',
+    url: 'https://kubernetes.io/docs/concepts/architecture/controller/',
+  },
+  {
+    m: ['자리배치 담당이 방송을 듣고 층을 고름.', '빈자리 없는 층은 빼고, 여유가 많은 층에 배정함.', '정리 중인 직원도 아직 자리를 차지함.'],
+    t: ['kube-scheduler가 필터링 → 점수 매기기로 노드를 고름.', 'Binding으로 nodeName이 기록됨.', '종료 중인 Pod도 아직 노드 자원을 씀.'],
+    clock: C1,
+    ref: '필터링으로 Pod를 놓을 수 없는 노드를 빼고, 남은 노드에 점수를 매겨 가장 높은 곳을 고름. 점수가 같으면 그중 무작위로 고름. (이 시뮬레이터는 점수를 빈자리 수로 단순화함.) 종료 중인 Pod는 삭제가 끝날 때까지 노드 자원을 차지함.',
+    url: 'https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/',
+  },
+  {
+    m: ['층 관리자가 방송을 듣고 신입을 자리에 앉힘.', '근무 시작을 보고하고, 장부에 \'근무\'로 적힘.', '이때 잠깐 4명이 있음(1명은 정리 중).'],
+    t: ['kubelet이 컨테이너 런타임으로 컨테이너를 띄움.', 'status를 Running으로 보고함.', '이때 잠깐 Pod가 4개임(1개는 Terminating).'],
+    clock: '실제 수 초 (이미지 받기에 따라 다름)',
+    ref: 'kubelet은 자기 노드에 배정된 Pod를 watch하다가 컨테이너 런타임(CRI)으로 컨테이너를 실행하고, 상태를 apiserver에 보고함.',
+    url: 'https://kubernetes.io/docs/concepts/overview/components/#kubelet',
+  },
+  {
+    m: ['정리가 끝난 직원이 나가고, 장부에서 지워짐.', '정원 3명 회복. 신입은 이름이 다른 새 직원임.', '다른 직원을 클릭하면 다시 해 볼 수 있음.'],
+    t: ['종료가 끝난 Pod는 etcd에서 삭제됨.', 'replicas 3 회복. 새 Pod는 이름·IP가 다름.', '다른 Pod를 클릭하면 다시 해 볼 수 있음.'],
+    clock: '정리 시작 후 최대 30초',
+    ref: '컨테이너 종료가 끝나면 kubelet의 마지막 요청으로 Pod 오브젝트가 API에서 삭제됨. 새 Pod는 ReplicaSet이 따로 만든 오브젝트라 이름·IP가 다름.',
+    url: 'https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination',
+  },
+];
+
+const entry = (id) => S.ledger.find((e) => e.id === id);
+
+const RUN = [
+  null,
+  async () => { // 1. 퇴사 서류 → 창구
+    await hop(S.A.me);
+    await fly(P.me(), P.api(), 1000);
+    S.apiAwake = true;
+    await wait(300);
+  },
+  async () => { // 2. 검사
+    await receive(true);
+    await wait(400);
+  },
+  async () => { // 3. 장부 기록 + 방송
+    const v = S.victim;
+    await record(() => { entry(v.id).st = 'term'; return v.id; });
+    await broadcast([P.kub(v.node), P.rs()]);
+    await doze();
+  },
+  async () => { // 4. 퇴근 정리 시작 · 정원 다시 세기
+    const v = S.victim;
+    v.state = 'term'; v.box = true;
+    bubble(v.x + 6, v.feet - 22, { m: '정리 중…', t: 'SIGTERM' }, Infinity, 'no');
+    await wait(500);
+    bubble(S.A.rs.x + 6, 26, { m: '원함 3 / 실제 2', t: 'spec 3 / 실제 2' });
+    await hop(S.A.rs);
+    await wait(700);
+  },
+  async () => { // 5. 채용 요청 → 장부에 '자리 미정'
+    await hop(S.A.rs);
+    await fly(P.rs(), P.api(), 900);
+    await receive(false);
+    const f = addPod(null, null);
+    S.fresh = f;
+    await record(() => { S.ledger.push({ id: f.id, node: null, st: 'pend' }); return f.id; });
+    await broadcast([P.sch()]);
+    await doze();
+  },
+  async () => { // 6. 자리 배치
+    const occ = ROOM_X.map((_, n) => S.pods.filter((p) => p.node === n && (p.state === 'run' || p.state === 'term')).length);
+    const free = occ.map((c) => 2 - c);
+    const best = Math.max(...free);
+    const cand = free.map((f, n) => (f === best && f > 0 ? n : -1)).filter((n) => n >= 0);
+    const target = cand[Math.floor(Math.random() * cand.length)];
+    for (let n = 0; n < 3; n++) {
+      if (free[n] <= 0) bubble(ROOM_X[n] + 38, 94, { m: '✗ 빈자리 없음', t: '✗ 필터 탈락' }, Infinity, 'no');
+      else bubble(ROOM_X[n] + 38, 94, { m: `여유 ${free[n]}`, t: `점수 ${free[n]}` });
+      await wait(350);
+    }
+    await wait(300);
+    bubble(ROOM_X[target] + 38, 84, { m: '✓ 배정', t: '✓ 선택' }, Infinity, 'ok');
+    await hop(S.A.sch);
+    await fly(P.sch(), P.api(), 900);
+    await receive(false);
+    const f = S.fresh;
+    f.node = target;
+    f.desk = [0, 1].find((d) => !S.pods.some((p) => p !== f && p.node === target && p.desk === d && (p.state === 'run' || p.state === 'term')));
+    S.target = target;
+    await record(() => { const e = entry(f.id); e.node = target; e.st = 'crt'; return f.id; });
+    await broadcast([P.kub(target)]);
+    await doze();
+  },
+  async () => { // 7. 신입 출근 → 근무 보고
+    const f = S.fresh, n = S.target;
+    await hop(S.kub[n]);
+    f.x = ROOM_X[n] + 62; f.feet = DESK_FEET; f.state = 'run';
+    await walk(f, deskX(n, f.desk), 1200);
+    f.dir = 'r';
+    await wait(200);
+    await fly(P.kub(n), P.api(), 1000);
+    await receive(false);
+    await record(() => { entry(f.id).st = 'run'; return f.id; });
+    await doze();
+  },
+  async () => { // 8. 퇴사자 퇴장 → 장부에서 삭제
+    const v = S.victim;
+    clearBubbles();
+    await walk(v, ROOM_X[v.node] + 62, 1000);
+    await tween(400, (p) => { v.alpha = 1 - p; });
+    v.state = 'gone';
+    await fly(P.kub(v.node), P.api(), 1000);
+    await receive(false);
+    await record(() => { S.ledger = S.ledger.filter((e) => e.id !== v.id); return null; });
+    await doze();
+    bubble(S.A.rs.x + 6, 26, { m: '원함 3 / 실제 3 ✓', t: 'spec 3 / 실제 3 ✓' }, Infinity, 'ok');
+    S.pods = S.pods.filter((p) => p.state !== 'gone');
+  },
+];
+
+// ===== 8. 진행 =====
+
+let cur = 0, busy = false;
+const $ = (id) => document.getElementById(id);
+
+function say(i) {
+  const s = STEPS[i];
+  $('lines').innerHTML = '';
+  s[MODE].forEach((line) => { const p = document.createElement('p'); p.textContent = line; $('lines').appendChild(p); });
+  $('clock').textContent = s.clock ? `⏱ ${s.clock}` : '';
+  $('refText').textContent = s.ref;
+  $('refLink').href = s.url;
+  $('refLink').textContent = s.url.replace('https://', '');
+  $('count').textContent = i === 0 ? '' : `${i} / ${STEPS.length - 1}`;
+}
+
+function updBtns() {
+  $('next').disabled = busy || cur === 0 || cur >= STEPS.length - 1;
+}
+
+async function runStep(i) {
+  const g = gen;
+  cur = i;
+  say(i);
+  if (i !== 8) clearBubbles();
+  busy = true; updBtns();
+  await RUN[i]();
+  if (g !== gen) return;
+  busy = false;
+  if (i === STEPS.length - 1) { S.phase = 'idle'; updBtns(); return; }
+  updBtns();
+  if ($('auto').checked) {
+    await wait(1500);
+    if (g === gen && cur === i && !busy) next();
+  }
+}
+
+function next() { if (!busy && cur >= 1 && cur < STEPS.length - 1) runStep(cur + 1); }
+
+function reset() {
+  gen++;
+  tweens.length = 0;
+  clearBubbles();
+  podTags.forEach((el) => el.remove()); podTags.clear();
+  initState();
+  renderLedger();
+  cur = 0; busy = false;
+  say(0); updBtns();
+}
+
+function podAt(x, y) {
+  return S.pods.find((p) => p.state === 'run' && x >= p.x && x < p.x + 12 && y >= p.feet - 17 && y <= p.feet);
+}
+function toCanvas(e) { return [(e.offsetX / cv.clientWidth) * W, (e.offsetY / cv.clientHeight) * H]; }
+
+function clickPod(p) {
+  if (S.phase !== 'idle' || !p || p.state !== 'run') return;
+  clearBubbles();
+  S.phase = 'run';
+  S.victim = p;
+  S.fresh = null;
+  runStep(1);
+}
+
+cv.addEventListener('click', (e) => clickPod(podAt(...toCanvas(e))));
+cv.addEventListener('mousemove', (e) => { cv.style.cursor = S.phase === 'idle' && podAt(...toCanvas(e)) ? 'pointer' : 'default'; });
+$('next').addEventListener('click', next);
+$('reset').addEventListener('click', reset);
+$('auto').addEventListener('change', () => { if ($('auto').checked) next(); });
+
+// ===== 9. 비유 / 용어 =====
+
+function setMode(m) {
+  MODE = m;
+  document.querySelectorAll('#mode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
+  document.querySelectorAll('[data-m]').forEach((el) => { el.textContent = el.dataset[m]; });
+  podTags.forEach((el, id) => { const p = S.pods.find((q) => q.id === id); if (p) el.textContent = m === 'm' ? p.mn : `…${p.sfx}`; });
+  say(cur);
+  renderLedger();
+}
+document.querySelectorAll('#mode button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+const SCENES = [
+  { m: '① 퇴사 → 재채용', t: '① Pod 삭제 → 재생성', on: true },
+  { m: '② 신입 자리 배치', t: '② 스케줄링' },
+  { m: '③ 채용 요청서 따라가기', t: '③ apply → Pod 실행' },
+  { m: '④ 층 정전', t: '④ 노드 장애' },
+  { m: '⑤ 책상 크기 초과', t: '⑤ limits · OOMKilled' },
+  { m: '⑥ 업무 매뉴얼 개정', t: '⑥ 롤링 업데이트' },
+  { m: '⑦ 대표번호 연결', t: '⑦ Service' },
+];
+SCENES.forEach((s) => {
+  const b = document.createElement('button');
+  b.dataset.m = s.m; b.dataset.t = s.t;
+  b.textContent = s.m;
+  if (s.on) b.className = 'on'; else { b.disabled = true; b.title = '준비 중'; }
+  $('scenes').appendChild(b);
+});
+
+// ===== 10. 루프 =====
+
+function frame(ts) {
+  now = ts; T++;
+  for (let i = tweens.length - 1; i >= 0; i--) {
+    const w = tweens[i];
+    const p = Math.min(1, (now - w.t0) / w.ms);
+    w.fn(p);
+    if (p >= 1) { tweens.splice(i, 1); w.res(); }
+  }
+  bubbles = bubbles.filter((b) => { if (now > b.until) { b.d.remove(); return false; } return true; });
+  draw();
+  updateTags();
+  requestAnimationFrame(frame);
+}
+
+reset();
+setMode('m');
+requestAnimationFrame(frame);
+
+window.sim = { get S() { return S; }, STEPS, setMode, next, reset, clickPod, get cur() { return cur; }, get busy() { return busy; } };
+</script>
+</body>
+</html>
