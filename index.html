@@ -46,6 +46,7 @@
   .ledger th, .ledger td { text-align: left; padding: 2px 4px; border-bottom: 1px dashed #d9cdb4; font-size: 12px; }
   .ledger tr.flash td { animation: flash 1.4s ease-out; }
   @keyframes flash { from { background: #ffe27a; } }
+  .ledger tr.flash-loop td { animation: flash 1.4s ease-out infinite; }
   .ctrl { display: flex; gap: 6px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
   .ctrl button { font: inherit; font-size: 14px; padding: 6px 14px; border: 2px solid var(--ink); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
   .ctrl button.main { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: bold; }
@@ -404,6 +405,7 @@ function draw() {
   S.rings.forEach(drawRing);
   S.envs.forEach((e) => ctx.drawImage(SPR.env, Math.round(e.x - 3), Math.round(e.y - 2)));
   S.bangs.forEach((b) => ctx.drawImage(SPR.bang, Math.round(b.x - 2), Math.round(b.y - 14 - (Math.floor(T / 10) % 2))));
+  drawEcho();
 }
 
 // ===== 4. 이름표 · 말풍선 (캔버스 밖 HTML — 한글은 캔버스에서 못 읽는다) =====
@@ -505,6 +507,7 @@ function renderLedger() {
     }
     const tr = document.createElement('tr');
     if (flash.includes(e.id)) tr.className = 'flash';
+    else if (loopFlash.includes(e.id)) tr.className = 'flash-loop';
     cells.forEach((c) => {
       const td = document.createElement('td');
       td.textContent = L(c);
@@ -524,6 +527,7 @@ const wait = (ms) => tween(ms, () => {});
 const ease = (p) => (p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2);
 
 async function fly(from, to, ms = 800) {
+  S.echo = { k: 'fly', from, to };
   const e = { x: from[0], y: from[1] };
   S.envs.push(e);
   await tween(ms, (p) => {
@@ -534,7 +538,7 @@ async function fly(from, to, ms = 800) {
   S.envs.splice(S.envs.indexOf(e), 1);
 }
 
-function hop(a) { return tween(320, (p) => { a.dy = -Math.round(Math.sin(Math.PI * p) * 3); }); }
+function hop(a) { S.echo = { k: 'hop', a }; return tween(320, (p) => { a.dy = -Math.round(Math.sin(Math.PI * p) * 3); }); }
 
 function bang(pos, ms = 1500) {
   const b = { x: pos[0], y: pos[1] };
@@ -550,6 +554,7 @@ async function receive(full) {
     ? [{ m: '신분 ✓', t: '인증 ✓' }, { m: '권한 ✓', t: '인가 ✓' }, { m: '양식 ✓', t: '어드미션 ✓' }]
     : [{ m: '검사 ✓', t: '인증·인가·어드미션 ✓' }];
   const xs = full ? [100, 126, 152] : [126];
+  S.echo = { k: 'stamp', items, xs };
   for (let i = 0; i < items.length; i++) {
     bubble(xs[i], 24, items[i], full ? 2600 : 1300, 'ok');
     await wait(full ? 500 : 400);
@@ -562,6 +567,7 @@ async function record(change) {
   S.drawer = 1;
   const changed = change();
   flash = changed == null ? [] : [].concat(changed);
+  S.echo = { k: 'rec', ids: flash.slice() };
   renderLedger();
   await wait(400);
   S.drawer = 0;
@@ -569,12 +575,57 @@ async function record(change) {
 
 // 장부가 바뀌었다고 방송(watch) → 듣는 사람 머리 위에 !
 async function broadcast(listeners) {
+  S.echo = { k: 'ring', listeners };
   const r = { r: 4, a: 1 };
   S.rings.push(r);
   await tween(750, (p) => { r.r = 4 + p * 80; r.a = 1 - p; });
   S.rings.splice(S.rings.indexOf(r), 1);
   listeners.forEach((pos) => bang(pos));
   await wait(500);
+}
+
+// 단계가 끝나고 「다음」을 기다리는 동안 마지막 동작을 반복한다 (자동 재생 중에는 안 함)
+let loopFlash = [];
+const echoOn = () => S.echo && !busy && !$('auto').checked;
+const echoPhase = () => (T % 84) / 84;
+
+function startEcho() {
+  const E = S.echo;
+  if (!E || $('auto').checked) return;
+  if (E.k === 'rec' && E.ids.length) { loopFlash = E.ids; renderLedger(); }
+  if (E.k === 'stamp') E.items.forEach((it, i) => bubble(E.xs[i], 24, it, Infinity, 'ok'));
+}
+
+function stopEcho() {
+  const E = S.echo;
+  if (E && E.k === 'hop') E.a.dy = 0;
+  if (E && E.k === 'rec') S.drawer = 0;
+  S.echo = null;
+  if (loopFlash.length) { loopFlash = []; renderLedger(); }
+}
+
+function tickEcho() {
+  const E = S.echo;
+  if (!E || !echoOn()) return;
+  const ph = echoPhase();
+  if (E.k === 'hop') E.a.dy = ph < 0.4 ? -Math.round(Math.sin((Math.PI * ph) / 0.4) * 3) : 0;
+  if (E.k === 'rec') S.drawer = ph < 0.3 ? 1 : 0;
+}
+
+function drawEcho() {
+  const E = S.echo;
+  if (!E || !echoOn()) return;
+  const ph = echoPhase();
+  if (E.k === 'ring') {
+    drawRing({ r: 4 + ph * 80, a: 1 - ph });
+    E.listeners.forEach(([x, y]) => ctx.drawImage(SPR.bang, Math.round(x - 2), Math.round(y - 14 - (Math.floor(T / 10) % 2))));
+  }
+  if (E.k === 'fly') {
+    const q = ease(Math.min(1, ph * 1.25));
+    const x = E.from[0] + (E.to[0] - E.from[0]) * q;
+    const y = E.from[1] + (E.to[1] - E.from[1]) * q - Math.sin(Math.PI * Math.min(1, ph * 1.25)) * 10;
+    ctx.drawImage(SPR.env, Math.round(x - 3), Math.round(y - 2));
+  }
 }
 
 async function doze() { await wait(300); S.apiAwake = false; }
@@ -1155,11 +1206,13 @@ async function runStep(i) {
   const g = gen;
   cur = i;
   say(i);
+  stopEcho();
   clearBubbles();
   busy = true; updBtns();
   await SC.run[i]();
   if (g !== gen) return;
   busy = false;
+  startEcho();
   if (i === lastStep()) { S.phase = 'idle'; updBtns(); renderChoices(); return; }
   updBtns();
   if ($('auto').checked) {
@@ -1175,6 +1228,7 @@ function reset() {
   tweens.length = 0;
   clearBubbles(true);
   podTags.forEach((el) => el.remove()); podTags.clear();
+  loopFlash = [];
   initState();
   refreshRoomTags();
   Object.assign($('lrs').dataset, SC.sub);
@@ -1203,7 +1257,9 @@ cv.addEventListener('click', (e) => clickPod(podAt(...toCanvas(e))));
 cv.addEventListener('mousemove', (e) => { cv.style.cursor = S.phase === 'idle' && podAt(...toCanvas(e)) ? 'pointer' : 'default'; });
 $('next').addEventListener('click', next);
 $('reset').addEventListener('click', reset);
-$('auto').addEventListener('change', () => { if ($('auto').checked) next(); });
+$('auto').addEventListener('change', () => {
+  if ($('auto').checked) { if (loopFlash.length) { loopFlash = []; renderLedger(); } next(); } else if (!busy) startEcho();
+});
 
 // ===== 9. 비유 / 용어 =====
 
@@ -1253,6 +1309,7 @@ function frame(ts) {
     if (p >= 1) { tweens.splice(i, 1); w.res(); }
   }
   bubbles = bubbles.filter((b) => { if (now > b.until) { b.d.remove(); return false; } return true; });
+  tickEcho();
   draw();
   updateTags();
   requestAnimationFrame(frame);
