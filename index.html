@@ -172,6 +172,7 @@ const LOOKS = {
   rs:  { h: '#3a2a22', t: '#7cc27e', p: '#4f6a5a' },
   sch: { h: '#c9645a', t: '#c9a0e8', p: '#5a4a7a' },
   dep: { h: '#4a3428', t: '#5fb3b3', p: '#3d4a6a' },
+  nc:  { h: '#2f2a3a', t: '#a8c66c', p: '#4f6a5a' },
   kub: { h: '#f5b93a', t: '#46598f', p: '#3d4a6a' }, // 노란 머리 = 안전모
   emp: [
     { h: '#5a3a2a', t: '#8fb8e8' }, { h: '#3a2a22', t: '#f29a9a' }, { h: '#a8693f', t: '#ffe27a' },
@@ -186,6 +187,8 @@ const SPR = {
   rs: makePerson(LOOKS.rs),
   sch: makePerson(LOOKS.sch),
   dep: makePerson(LOOKS.dep),
+  nc: makePerson(LOOKS.nc),
+  heart: makeSprite(['.i.i.', 'iiiii', '.iii.', '..i..']),
   kub: makePerson(LOOKS.kub),
   emp: LOOKS.emp.map((l) => makePerson(l)),
   desk: makeSprite([
@@ -243,7 +246,7 @@ function initState() {
     apiAwake: false,
     drawer: 0,
     rooms: ROOM_X.map(() => ({ win: false, taint: false })), // 창가 = 라벨, 공사 중 = taint
-    pods: [], ledger: [], envs: [], rings: [], bangs: [],
+    pods: [], ledger: [], envs: [], rings: [], bangs: [], hearts: [],
     phase: 'idle', victim: null, fresh: null, target: null, plan: null, used: false,
   };
   SC.init();
@@ -277,6 +280,7 @@ const P = {
   rs: () => [S.A.rs.x + 6, S.A.rs.feet - 20],
   sch: () => [S.A.sch.x + 6, S.A.sch.feet - 20],
   dep: () => [S.A.dep.x + 6, S.A.dep.feet - 20],
+  nc: () => [S.A.nc.x + 6, S.A.nc.feet - 20],
   api: () => [126, 42],
   kub: (n) => [S.kub[n].x + 6, S.kub[n].feet - 20],
   drawer: () => [161, 41],
@@ -305,13 +309,14 @@ function drawBG() {
       rect(x0 + 29, 82, 20, 14, o); rect(x0 + 30, 83, 18, 12, '#bfe3f2');
       rect(x0 + 38, 83, 2, 12, o); rect(x0 + 30, 88, 18, 2, o);
     }
-    if (r.taint) {                             // 공사 중 (taint): 위쪽 줄무늬 + 문에 X 테이프
+    if (r.taint || r.unreach) {                // taint: 위쪽 줄무늬 + 문에 X 테이프 (공사 중 = 노랑, 연락 두절 = 빨강)
+      const tape = r.unreach ? '#e8434a' : '#f5b93a';
       for (let x = 0; x < 76; x++) for (let y = 0; y < 3; y++) {
-        rect(x0 + x, 70 + y, 1, 1, Math.floor((x + y) / 3) % 2 ? '#f5b93a' : '#3d2c3a');
+        rect(x0 + x, 70 + y, 1, 1, Math.floor((x + y) / 3) % 2 ? tape : '#3d2c3a');
       }
       for (let i = 0; i < 9; i++) {
-        rect(x0 + 66 + i, 98 + i * 2, 1, 2, '#f5b93a');
-        rect(x0 + 74 - i, 98 + i * 2, 1, 2, '#f5b93a');
+        rect(x0 + 66 + i, 98 + i * 2, 1, 2, tape);
+        rect(x0 + 74 - i, 98 + i * 2, 1, 2, tape);
       }
     }
   });
@@ -358,6 +363,10 @@ function draw() {
     drawPerson(SPR.dep, S.A.dep.x, S.A.dep.feet + S.A.dep.dy);
     ctx.drawImage(SPR.desk, S.A.dep.x - 2, 51);
   }
+  if (S.A.nc) {                     // 층 점검 담당은 장면 ④
+    drawPerson(SPR.nc, S.A.nc.x, S.A.nc.feet + S.A.nc.dy);
+    ctx.drawImage(SPR.desk, S.A.nc.x - 2, 51);
+  }
   drawPerson(S.apiAwake ? SPR.api : SPR.apiSleep, 120, S.apiAwake ? 53 : 58);
   drawCounter();
   drawCabinet();
@@ -387,6 +396,18 @@ function draw() {
     ctx.globalAlpha = 1;
   });
   S.kub.forEach((k) => drawPerson(SPR.kub, k.x, k.feet + k.dy));
+  ROOM_X.forEach((x0, n) => {       // 정전된 층은 어둡게
+    const d = S.rooms[n].dark;
+    if (!d) return;
+    ctx.globalAlpha = 0.5 * d;
+    rect(x0, 70, 76, 71, '#232046');
+    ctx.globalAlpha = 1;
+  });
+  if (SC.clickRooms && S.phase === 'idle' && !S.used) {   // 클릭할 수 있는 층 표시
+    const bob = Math.floor(T / 15) % 2;
+    ROOM_X.forEach((x0, n) => { if (S.pods.some((p) => p.node === n && p.state === 'run')) ctx.drawImage(SPR.arrow, x0 + 36, 76 + bob); });
+  }
+  drawHearts();
 
   // 클릭할 수 있는 직원 표시
   if (SC.clickPods && S.phase === 'idle') {
@@ -428,6 +449,7 @@ const STATIC_TAGS = [
   { txt: { m: '장부', t: 'etcd' }, at: () => [165, 28] },
   { txt: { m: '정원 담당', t: 'ReplicaSet 컨트롤러' }, at: () => [S.A.rs.x + 6, S.A.rs.feet - 18] },
   { txt: { m: '기획 담당', t: 'Deployment 컨트롤러' }, at: () => S.A.dep && [S.A.dep.x + 6, S.A.dep.feet - 18] },
+  { txt: { m: '층 점검 담당', t: 'Node 컨트롤러' }, at: () => S.A.nc && [S.A.nc.x + 6, S.A.nc.feet - 18] },
   { txt: { m: '자리배치 담당', t: 'kube-scheduler' }, at: () => [S.A.sch.x + 10, S.A.sch.feet - 18] },
   ...ROOM_X.map((x0, n) => ({ room: n, txt: ROOMS[n], at: () => [x0 + 2, 79], cls: 'room' })),
   ...ROOM_X.map((x0, n) => ({ txt: { m: '층 관리자', t: 'kubelet' }, at: () => [S.kub[n].x + 7, S.kub[n].feet - 18] })),
@@ -438,8 +460,8 @@ STATIC_TAGS.forEach((s) => { s.el = makeTag(s.txt, s.cls); });
 function refreshRoomTags() {
   STATIC_TAGS.filter((s) => s.room != null).forEach((s) => {
     const n = s.room, r = S.rooms[n];
-    s.el.dataset.m = ROOMS[n].m + (r.win ? ' · 창가' : '') + (r.taint ? ' · 공사 중' : '');
-    s.el.dataset.t = ROOMS[n].t + (r.win ? ' · window=yes' : '') + (r.taint ? ' · taint repair' : '');
+    s.el.dataset.m = ROOMS[n].m + (r.win ? ' · 창가' : '') + (r.taint ? ' · 공사 중' : '') + (r.unreach ? ' · 연락 두절' : '');
+    s.el.dataset.t = ROOMS[n].t + (r.win ? ' · window=yes' : '') + (r.taint ? ' · taint repair' : '') + (r.unreach ? ' · unreachable' : '');
     s.el.textContent = s.el.dataset[MODE];
   });
 }
@@ -484,6 +506,7 @@ const ST = {
   term: { m: '퇴사 예정', t: 'Terminating' },
   pend: { m: '자리 미정', t: 'Pending' },
   crt:  { m: '출근 준비', t: 'ContainerCreating' },
+  nr:   { m: '연락 안 됨', t: 'Running (NotReady)' },
 };
 const LEDGER_NAME = {
   dep: { m: '계획서: 영업팀', t: 'deployment/web' },
@@ -496,7 +519,11 @@ function renderLedger() {
   const tree = S.ledger.some((e) => e.kind === 'rs');   // 정원표가 있으면 직원은 그 아래로
   S.ledger.forEach((e) => {
     let cells;
-    if (e.kind === 'dep' || e.kind === 'rs') {
+    if (e.kind === 'node') {
+      const r = S.rooms[e.n];
+      cells = [{ m: `${ROOMS[e.n].m} 출입 기록`, t: `node/${ROOMS[e.n].t}` }, { m: '-', t: '-' },
+        r.unreach ? { m: '연락 두절', t: 'Unknown' } : { m: '정상', t: 'Ready' }];
+    } else if (e.kind === 'dep' || e.kind === 'rs') {
       const r = e.ready || 0;
       cells = [LEDGER_NAME[e.kind], { m: '-', t: '-' },
         e.kind === 'dep' ? { m: `근무 ${r}/3`, t: `READY ${r}/3` } : { m: `근무 ${r}/3`, t: `ready ${r}/3` }];
@@ -582,6 +609,24 @@ async function broadcast(listeners) {
   S.rings.splice(S.rings.indexOf(r), 1);
   listeners.forEach((pos) => bang(pos));
   await wait(500);
+}
+
+// 하트비트: 살아 있는 층의 관리자가 주기적으로 ♥ 를 창구로 보낸다
+function spawnHearts() {
+  ROOM_X.forEach((_, n) => {
+    if (S.rooms[n].down || (T + n * 50) % 150) return;
+    S.hearts.push({ from: P.kub(n), t0: now });
+  });
+}
+function drawHearts() {
+  S.hearts = S.hearts.filter((h) => now - h.t0 < 800);
+  S.hearts.forEach((h) => {
+    const p = (now - h.t0) / 800, q = ease(p);
+    const x = h.from[0] + (126 - h.from[0]) * q, y = h.from[1] + (46 - h.from[1]) * q;
+    ctx.globalAlpha = p > 0.8 ? (1 - p) * 5 : 1;
+    ctx.drawImage(SPR.heart, Math.round(x - 2), Math.round(y - 2));
+    ctx.globalAlpha = 1;
+  });
 }
 
 // 단계가 끝나고 「다음」을 기다리는 동안 마지막 동작을 반복한다 (자동 재생 중에는 안 함)
@@ -1153,6 +1198,180 @@ const SCENE3 = {
   run: RUN3,
 };
 
+// ===== 7-4. 장면 ④ 층 정전 (대본) =====
+
+const URL_NODES = 'https://kubernetes.io/docs/concepts/architecture/nodes/';
+
+function steps4() {
+  const n = S.down, R = n == null ? { m: '그 층', t: '그 노드' } : ROOMS[n];
+  const k = n == null ? 0 : S.pods.filter((p) => p.node === n && (p.state === 'run' || p.state === 'term')).length;
+  return [
+    {
+      m: ['층 관리자들이 주기적으로 \'살아있음\' 신호(♥)를 창구에 보냄.', '직원이 있는 층을 클릭하면 그 층이 정전됨.'],
+      t: ['각 kubelet이 주기적으로 Lease를 갱신함(하트비트).', 'Pod가 있는 노드를 클릭하면 그 노드에 장애가 남.'],
+      clock: '실제 10초 간격 (화면은 빠르게)',
+      ref: '노드의 하트비트는 두 가지: Node .status 갱신과 kube-node-lease 네임스페이스의 Lease 갱신. kubelet은 Lease를 기본 10초마다 갱신함.',
+      url: `${URL_NODES}#heartbeats`,
+    },
+    {
+      m: [`${R.m}이 정전됨. 그 층 관리자의 신호가 끊김.`, '본사는 아직 모름. 장부에는 여전히 \'정상\'.'],
+      t: [`${R.t} 장애 → kubelet의 Lease 갱신이 멈춤.`, '컨트롤 플레인은 아직 모름. etcd에는 여전히 Ready.'],
+      ref: '장애가 났다고 알려 주는 쪽은 없음. 신호가 끊긴 것을 컨트롤 플레인이 스스로 알아채야 함.',
+      url: `${URL_NODES}#heartbeats`,
+    },
+    {
+      m: [`층 점검 담당: ${R.m} 신호가 일정 시간 넘게 없음 → \'연락 두절\'로 기록함.`, `${R.m}에 출입 금지 표시가 붙어, 새 직원은 그 층에 배정되지 않음.`],
+      t: ['Node 컨트롤러: 유예 시간 동안 갱신 없음 → Ready 조건을 Unknown으로 바꿈.', 'unreachable taint가 붙어 스케줄러가 이 노드를 피함. 그 노드 Pod는 NotReady.'],
+      clock: '실제 약 50초 (node-monitor-grace-period 기본값)',
+      ref: 'Node 컨트롤러는 기본 5초마다 노드 상태를 확인함. --node-monitor-grace-period(현재 문서 기본 50초, 예전 버전은 40초) 동안 응답이 없으면 Ready를 Unknown으로 바꾸고 node.kubernetes.io/unreachable taint를 붙임.',
+      url: `${URL_NODES}#node-controller`,
+    },
+    {
+      m: ['바로 내보내지 않고 5분을 기다림. 잠깐 끊긴 것일 수도 있기 때문.', '5분이 지나도 그대로면 그 층 직원을 퇴사 처리함(장부에만).'],
+      t: ['Pod에 자동으로 붙는 toleration(unreachable, 300초) 동안 기다림.', '300초 후 taint 기반 축출로 Pod 삭제가 요청됨(deletionTimestamp).'],
+      clock: '실제 5분 (기본값)',
+      ref: 'Kubernetes는 not-ready·unreachable taint에 대한 toleration(tolerationSeconds=300)을 Pod에 자동으로 붙임 → 문제 감지 후 5분간 노드에 남음. 1.29부터 축출은 kube-controller-manager 안의 별도 taint-eviction-controller가 함.',
+      url: 'https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions',
+    },
+    {
+      m: [`정원 담당: 퇴사 예정자를 빼고 셈 → 원함 3 / 실제 ${3 - k}.`, `신입 ${k}명 채용 요청. 신입은 로비에서 대기함.`],
+      t: [`ReplicaSet 컨트롤러: 삭제 중인 Pod를 빼고 셈 → 3 / ${3 - k}.`, `새 Pod ${k}개 생성 요청(Pending).`],
+      clock: C1,
+      ref: 'ReplicaSet 컨트롤러는 deletionTimestamp가 있는 Pod를 실행 중 개수에서 뺌 → 장애 노드 Pod가 아직 지워지지 않았어도 새 Pod를 요청함.',
+      url: 'https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/',
+    },
+    {
+      m: ['자리배치 담당: 출입 금지 층은 빼고 배정함.', '정전된 층 직원이 \'이사\'하는 게 아니라, 다른 층에 새 직원이 오는 것.'],
+      t: ['kube-scheduler: unreachable taint가 있는 노드는 필터에서 제외됨.', 'Pod가 옮겨지는 게 아니라 다른 노드에 새 Pod가 생기는 것(이름·IP 다름).'],
+      clock: C1,
+      ref: 'Node 컨트롤러가 노드 문제에 맞는 taint를 붙이므로 스케줄러는 비정상 노드에 Pod를 놓지 않음.',
+      url: `${URL_NODES}#node-controller`,
+    },
+    {
+      m: ['층 관리자가 신입을 앉힘 → 정원 3명 회복.', '정전된 층 직원은 \'퇴사 예정\'인 채로 남음. 층이 복구되어야 정리됨.', '처음부터를 누르면 다른 층으로 해 볼 수 있음.'],
+      t: ['kubelet이 새 Pod를 실행 → 3/3 회복.', '장애 노드의 Pod는 Terminating으로 남음. 노드가 돌아오거나 Node를 지워야 정리됨.', '처음부터를 누르면 다른 노드로 해 볼 수 있음.'],
+      clock: '실제 수 초',
+      ref: '삭제 완료는 그 노드의 kubelet이 확인해야 하는데, 연락이 끊긴 노드는 확인하지 못함 → Terminating 유지. 그동안 실제 컨테이너가 그 노드에서 계속 돌고 있을 수도 있음.',
+      url: 'https://kubernetes.io/docs/tasks/run-application/force-delete-stateful-set-pod/',
+    },
+  ];
+}
+
+const RUN4 = [
+  null,
+  async () => { // 1. 정전 → 하트 멈춤
+    const n = S.down, r = S.rooms[n];
+    r.down = true;
+    await tween(600, (q) => { r.dark = q; });
+    bubble(ROOM_X[n] + 38, 100, { m: '정전!', t: '노드 장애' }, Infinity, 'no');
+    await wait(1500);
+  },
+  async () => { // 2. 신호 확인 → 연락 두절 · 출입 금지(taint)
+    const n = S.down;
+    await hop(S.A.nc);
+    for (let m = 0; m < 3; m++) {
+      bubble(ROOM_X[m] + 38, 100, m === n ? { m: '✗ 신호 없음', t: '✗ Lease 갱신 없음' } : { m: '♥ 신호 ✓', t: '♥ Lease ✓' }, Infinity, m === n ? 'no' : 'ok');
+      await wait(350);
+    }
+    await wait(400);
+    await fly(P.nc(), P.api(), 900);
+    await receive(false);
+    const vs = S.pods.filter((p) => p.node === n && p.state === 'run');
+    await record(() => {
+      S.rooms[n].unreach = true;
+      refreshRoomTags();
+      vs.forEach((v) => { entry(v.id).st = 'nr'; });
+      return ['node' + n, ...vs.map((v) => v.id)];
+    });
+    await broadcast([P.sch()]);
+    await doze();
+  },
+  async () => { // 3. 5분 대기 → 퇴사 처리 (장부에만)
+    const n = S.down, vs = S.pods.filter((p) => p.node === n && p.state === 'run');
+    S.victims = vs;
+    bubble(ROOM_X[n] + 38, 100, { m: '⏱ 5분 기다리는 중…', t: '⏱ tolerationSeconds 300' }, Infinity, 'no');
+    await wait(1800);
+    await hop(S.A.nc);
+    await fly(P.nc(), P.api(), 900);
+    await receive(false);
+    vs.forEach((v) => { v.state = 'term'; });
+    await record(() => { vs.forEach((v) => { entry(v.id).st = 'term'; }); return vs.map((v) => v.id); });
+    await broadcast([P.rs()]);
+    await doze();
+  },
+  async () => { // 4. 정원 담당 → 신입 요청 (로비 대기)
+    const k = S.victims.length;
+    bubble(S.A.rs.x + 6, 26, { m: `원함 3 / 실제 ${3 - k}`, t: `spec 3 / 실제 ${3 - k}` });
+    await hop(S.A.rs);
+    await wait(400);
+    await fly(P.rs(), P.api(), 900);
+    await receive(false);
+    const fs = LOBBY3.slice(0, k).map((x) => {
+      const f = addPod(null, null);
+      Object.assign(f, { x, feet: 58, dir: 'l', state: 'lobby', alpha: 0 });
+      return f;
+    });
+    S.fresh3 = fs;
+    await record(() => { fs.forEach((f) => S.ledger.push({ id: f.id, node: null, st: 'pend' })); return fs.map((f) => f.id); });
+    await tween(300, (q) => fs.forEach((f) => { f.alpha = q; }));
+    await broadcast([P.sch()]);
+    await doze();
+  },
+  async () => { // 5. 배정: 출입 금지 층 제외
+    const fs = S.fresh3, cnt = [0, 0, 0];
+    await hop(S.A.sch);
+    bubble(ROOM_X[S.down] + 38, 100, { m: '✗ 출입 금지', t: '✗ taint unreachable' }, Infinity, 'no');
+    await wait(400);
+    for (const f of fs) {
+      const free = cnt.map((c, n) => (S.rooms[n].unreach ? -1 : 2 - occ(n) - c));
+      const best = Math.max(...free);
+      const top = free.map((v, n) => (v === best && v > 0 ? n : -1)).filter((n) => n >= 0);
+      const n = top[Math.floor(Math.random() * top.length)];
+      f.target = n;
+      f.desk = freeDesks(n, f)[cnt[n]];
+      cnt[n]++;
+      bubble(ROOM_X[n] + 38, 100 - (cnt[n] - 1) * 8, { m: `✓ ${f.mn} 배정`, t: `✓ …${f.sfx}` }, Infinity, 'ok');
+      await wait(450);
+    }
+    for (let i = 0; i < fs.length; i++) await fly(P.sch(), P.api(), 450);
+    await receive(false);
+    await record(() => {
+      fs.forEach((f) => { f.node = f.target; Object.assign(entry(f.id), { node: f.target, st: 'crt' }); });
+      return fs.map((f) => f.id);
+    });
+    await broadcast([...new Set(fs.map((f) => f.node))].map((n) => P.kub(n)));
+    await doze();
+  },
+  async () => { // 6. 출근 → 정원 회복 (정전 층 직원은 퇴사 예정 그대로)
+    const fs = S.fresh3, used = [...new Set(fs.map((f) => f.node))];
+    await Promise.all(used.map((n) => hop(S.kub[n])));
+    await tween(300, (q) => fs.forEach((f) => { f.alpha = 1 - q; }));
+    fs.forEach((f) => Object.assign(f, { x: ROOM_X[f.node] + 62, feet: DESK_FEET, state: 'run', alpha: 1 }));
+    await Promise.all(fs.map((f) => walk(f, deskX(f.node, f.desk), 1200)));
+    fs.forEach((f) => { f.dir = 'r'; });
+    await wait(200);
+    await Promise.all(used.map((n, i) => wait(i * 150).then(() => fly(P.kub(n), P.api(), 900))));
+    await receive(false);
+    await record(() => { fs.forEach((f) => { entry(f.id).st = 'run'; }); return fs.map((f) => f.id); });
+    await doze();
+    bubble(S.A.rs.x + 6, 26, { m: '원함 3 / 실제 3 ✓', t: 'spec 3 / 실제 3 ✓' }, Infinity, 'ok');
+  },
+];
+
+const SCENE4 = {
+  clickRooms: true,
+  heartbeat: true,
+  sub: { m: '장부는 창구직원만 씀 · 층 출입 기록 = 층 상태', t: 'etcd는 apiserver만 씀 · node = Node 오브젝트' },
+  init() {
+    S.A.nc = { x: 86, feet: 58, dy: 0 };
+    S.down = null; S.victims = null;
+    ROOM_X.forEach((_, n) => S.ledger.push({ id: 'node' + n, kind: 'node', n }));
+    addPod(0, 0); addPod(0, 1); addPod(1, 0);
+  },
+  steps: steps4,
+  run: RUN4,
+};
+
 let SC = SCENE1;
 
 // ===== 8. 진행 =====
@@ -1242,6 +1461,18 @@ function podAt(x, y) {
   if (!SC.clickPods) return null;
   return S.pods.find((p) => p.state === 'run' && x >= p.x && x < p.x + 12 && y >= p.feet - 17 && y <= p.feet);
 }
+function roomAt(x, y) {
+  if (!SC.clickRooms || S.phase !== 'idle' || S.used) return null;
+  const n = ROOM_X.findIndex((x0) => x >= x0 && x < x0 + 76 && y >= 69 && y <= 141);
+  return n >= 0 && S.pods.some((p) => p.node === n && p.state === 'run') ? n : null;
+}
+function clickRoom(n) {
+  if (n == null || S.phase !== 'idle' || S.used) return;   // 한 판에 한 층
+  S.used = true;
+  S.phase = 'run';
+  S.down = n;
+  runStep(1);
+}
 function toCanvas(e) { return [(e.offsetX / cv.clientWidth) * W, (e.offsetY / cv.clientHeight) * H]; }
 
 function clickPod(p) {
@@ -1253,8 +1484,14 @@ function clickPod(p) {
   runStep(1);
 }
 
-cv.addEventListener('click', (e) => clickPod(podAt(...toCanvas(e))));
-cv.addEventListener('mousemove', (e) => { cv.style.cursor = S.phase === 'idle' && podAt(...toCanvas(e)) ? 'pointer' : 'default'; });
+cv.addEventListener('click', (e) => {
+  const [x, y] = toCanvas(e);
+  if (SC.clickRooms) clickRoom(roomAt(x, y)); else clickPod(podAt(x, y));
+});
+cv.addEventListener('mousemove', (e) => {
+  const [x, y] = toCanvas(e);
+  cv.style.cursor = S.phase === 'idle' && (podAt(x, y) || roomAt(x, y) != null) ? 'pointer' : 'default';
+});
 $('next').addEventListener('click', next);
 $('reset').addEventListener('click', reset);
 $('auto').addEventListener('change', () => {
@@ -1277,7 +1514,7 @@ const SCENES = [
   { m: '① 퇴사 → 재채용', t: '① Pod 삭제 → 재생성', sc: SCENE1 },
   { m: '② 신입 자리 배치', t: '② 스케줄링', sc: SCENE2 },
   { m: '③ 채용 요청서 따라가기', t: '③ apply → Pod 실행', sc: SCENE3 },
-  { m: '④ 층 정전', t: '④ 노드 장애' },
+  { m: '④ 층 정전', t: '④ 노드 장애', sc: SCENE4 },
   { m: '⑤ 책상 크기 초과', t: '⑤ limits · OOMKilled' },
   { m: '⑥ 업무 매뉴얼 개정', t: '⑥ 롤링 업데이트' },
   { m: '⑦ 대표번호 연결', t: '⑦ Service' },
@@ -1309,6 +1546,7 @@ function frame(ts) {
     if (p >= 1) { tweens.splice(i, 1); w.res(); }
   }
   bubbles = bubbles.filter((b) => { if (now > b.until) { b.d.remove(); return false; } return true; });
+  if (SC.heartbeat) spawnHearts();
   tickEcho();
   draw();
   updateTags();
