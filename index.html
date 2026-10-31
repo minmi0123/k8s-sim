@@ -15,7 +15,7 @@
   .scenes button { font: inherit; font-size: 12px; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); }
   .scenes button.on { background: var(--ink); color: #fff; }
   .scenes button:disabled { opacity: .35; }
-  .mode { margin-left: auto; display: flex; border: 2px solid var(--ink); border-radius: 6px; overflow: hidden; }
+  .mode { display: flex; border: 2px solid var(--ink); border-radius: 6px; overflow: hidden; }
   .mode button { border: 0; background: #fff; color: var(--ink); padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
   .mode button.on { background: var(--ink); color: #fff; }
   .stage { position: relative; width: 100%; border: 3px solid var(--ink); border-radius: 4px; line-height: 0; }
@@ -55,13 +55,83 @@
   .ctrl button:disabled { opacity: .35; cursor: default; }
   .ctrl label { font-size: 13px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
   .ctrl .count { margin-left: auto; font-size: 12px; color: #7a6a6a; }
+  [hidden] { display: none !important; }
+  .nav { margin-left: auto; display: flex; gap: 4px; }
+  .nav button { font: inherit; font-size: 12px; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; }
+  .tag .short { display: none; }
+
+  /* 처음 화면 · 도감 (어두운 화면) */
+  body.dark { background: #1d1a22; }
+  .screen { --bg: #1d1a22; --panel: #2b2733; --raise: #3a3445; --sink: #15131a; --line: #e9e2d6; --text: #f1ece4; --muted: #a39cae; --hi: #ffe27a;
+            color: var(--text); max-width: 520px; margin: 0 auto; min-height: 100vh; border-left: 2px solid var(--panel); border-right: 2px solid var(--panel); }
+  #home { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 18px; text-align: center; }
+  #home .ttl { font-size: 27px; letter-spacing: -1px; margin: 0 0 6px; color: var(--hi); text-shadow: 3px 3px 0 var(--sink); }
+  #home .tagline { font-size: 12.5px; color: var(--muted); margin-bottom: 20px; }
+  #titleCv { width: 100%; max-width: 360px; border: 2px solid var(--line); margin-bottom: 22px; image-rendering: pixelated; image-rendering: crisp-edges; }
+  #home .menu { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 280px; }
+  #home .menu button { border: 2px solid var(--line); background: var(--panel); color: var(--text); padding: 13px; font: inherit; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 var(--sink); }
+  #home .menu button .s { display: block; font-size: 11px; font-weight: normal; color: var(--muted); margin-top: 3px; }
+  @media (hover: hover) { #home .menu button:hover { background: var(--hi); color: #1d1a22; } #home .menu button:hover .s { color: #1d1a22; } }
+  #home .menu button:active { background: var(--raise); transform: translateY(4px); box-shadow: none; }
+  #dex { max-width: 760px; padding: 12px 14px 30px; }
+  .dexhead { display: flex; align-items: center; gap: 10px; position: sticky; top: 0; background: var(--bg); padding: 6px 0 8px; border-bottom: 2px solid var(--line); z-index: 2; }
+  .dexhead h2 { font-size: 18px; margin: 0; color: var(--hi); }
+  .dexhead span { margin-left: auto; font-size: 12px; color: var(--muted); }
+  .dexhead button, .dexit .scs button { font: inherit; border: 2px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
+  .dexhead button { font-size: 13px; padding: 4px 10px; }
+  #dex h3 { font-size: 14px; color: var(--muted); margin: 18px 0 8px; }
+  .dexlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 6px; }
+  .dexit { display: flex; gap: 10px; align-items: flex-start; border: 2px solid var(--line); background: var(--panel); padding: 7px 8px; }
+  .dexit .art { flex: none; width: 72px; height: 60px; background: #f3e6c8; border: 2px solid var(--line); image-rendering: pixelated; image-rendering: crisp-edges; }
+  .dexit .nm { font-weight: bold; font-size: 15px; color: var(--hi); }
+  .dexit .tm { font-size: 12px; color: var(--muted); }
+  .dexit .ds { font-size: 13px; line-height: 1.45; margin-top: 3px; }
+  .dexit .scs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; font-size: 11px; color: var(--muted); align-items: center; }
+  .dexit .scs button { font-size: 12px; padding: 0 5px; }
+  @media (hover: hover) { .dexhead button:hover, .dexit .scs button:hover { background: var(--hi); color: #1d1a22; } }
+
+  /* 폰: 장면 탭은 옆으로 넘기는 한 줄, 이름표는 작고 짧게 */
+  @media (max-width: 700px) {
+    .wrap { padding: 8px; }
+    h1 { font-size: 15px; }
+    .scenes { order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .scenes::-webkit-scrollbar { display: none; }
+    .scenes button { flex: none; }
+    .tag { font-size: 8px; padding: 0 2px; }
+    .tag.pod { font-size: 7px; padding: 0 2px; }
+    .tag .full { display: none; }
+    .tag .short { display: inline; }
+    .bub { font-size: 10px; padding: 1px 4px; border-width: 1.5px; }
+    .say p { font-size: 14px; }
+    .ctrl button { padding: 6px 10px; }
+    .dexlist { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
-<body>
-<div class="wrap">
+<body class="dark">
+<div id="home" class="screen">
+  <h2 class="ttl">쿠버네티스 회사</h2>
+  <div class="tagline">장면으로 보는 쿠버네티스</div>
+  <canvas id="titleCv" width="160" height="120"></canvas>
+  <div class="menu">
+    <button id="goStart">시작하기<span class="s" id="startSub"></span></button>
+    <button id="goDex">도감<span class="s" id="dexSub"></span></button>
+  </div>
+</div>
+
+<div id="dex" class="screen" hidden>
+  <div class="dexhead"><button id="dexBack">← 돌아가기</button><h2>용어 도감</h2><span id="dexCount"></span></div>
+  <div id="dexBody"></div>
+</div>
+
+<div class="wrap" id="simScreen" hidden>
   <header>
     <h1>쿠버네티스 회사</h1>
     <div class="scenes" id="scenes"></div>
+    <div class="nav">
+      <button id="toHome" title="처음 화면">⌂ 처음</button>
+      <button id="toDex">도감</button>
+    </div>
     <div class="mode" id="mode">
       <button data-mode="m" class="on">비유</button>
       <button data-mode="t">용어</button>
@@ -501,34 +571,39 @@ function draw() {
 const stage = document.getElementById('stage');
 const place = (el, x, y) => { el.style.left = `${(x / W) * 100}%`; el.style.top = `${(y / H) * 100}%`; };
 
-function makeTag(txt, cls = '') {
+function makeTag(txt, cls = '', short) {
   const d = document.createElement('div');
   d.className = `tag ${cls}`;
-  d.dataset.m = txt.m; d.dataset.t = txt.t;
-  d.textContent = L(txt);
+  const part = (o, c) => {
+    const sp = document.createElement('span');
+    sp.className = c; sp.dataset.m = o.m; sp.dataset.t = o.t; sp.textContent = L(o);
+    d.appendChild(sp);
+  };
+  if (short) { part(txt, 'full'); part(short, 'short'); }   // 폰(좁은 화면)에선 짧은 이름만 보임 — CSS 가 고름
+  else { d.dataset.m = txt.m; d.dataset.t = txt.t; d.textContent = L(txt); }
   stage.appendChild(d);
   return d;
 }
 
 const STATIC_TAGS = [
-  { txt: { m: '나(관리자)', t: 'kubectl' }, at: () => [S.A.me.x + 6, S.A.me.feet - 18] },
-  { txt: { m: '창구직원', t: 'kube-apiserver' }, at: () => [126, S.apiAwake ? 36 : 41] },
+  { txt: { m: '나(관리자)', t: 'kubectl' }, s: { m: '나', t: 'kubectl' }, at: () => [S.A.me.x + 6, S.A.me.feet - 18] },
+  { txt: { m: '창구직원', t: 'kube-apiserver' }, s: { m: '창구', t: 'apiserver' }, at: () => [126, S.apiAwake ? 36 : 41] },
   { txt: { m: '장부', t: 'etcd' }, at: () => [165, 28] },
-  { txt: { m: '정원 담당', t: 'ReplicaSet 컨트롤러' }, at: () => [S.A.rs.x + 6, S.A.rs.feet - 18] },
-  { txt: { m: '기획 담당', t: 'Deployment 컨트롤러' }, at: () => S.A.dep && [S.A.dep.x + 6, S.A.dep.feet - 18] },
-  { txt: { m: '층 점검 담당', t: 'Node 컨트롤러' }, at: () => S.A.nc && [S.A.nc.x + 6, S.A.nc.feet - 18] },
-  { txt: { m: '명단 담당', t: 'EndpointSlice 컨트롤러' }, at: () => S.A.ep && [S.A.ep.x + 6, S.A.ep.feet - 18] },
-  { txt: { m: '번호 안내', t: 'CoreDNS' }, at: () => S.dns && [193, 44] },
+  { txt: { m: '정원 담당', t: 'ReplicaSet 컨트롤러' }, s: { m: '정원', t: 'RS' }, at: () => [S.A.rs.x + 6, S.A.rs.feet - 18] },
+  { txt: { m: '기획 담당', t: 'Deployment 컨트롤러' }, s: { m: '기획', t: 'Deploy' }, at: () => S.A.dep && [S.A.dep.x + 6, S.A.dep.feet - 18] },
+  { txt: { m: '층 점검 담당', t: 'Node 컨트롤러' }, s: { m: '점검', t: 'Node' }, at: () => S.A.nc && [S.A.nc.x + 6, S.A.nc.feet - 18] },
+  { txt: { m: '명단 담당', t: 'EndpointSlice 컨트롤러' }, s: { m: '명단', t: 'EPS' }, at: () => S.A.ep && [S.A.ep.x + 6, S.A.ep.feet - 18] },
+  { txt: { m: '번호 안내', t: 'CoreDNS' }, s: { m: '안내', t: 'DNS' }, at: () => S.dns && [193, 44] },
   ...ROOM_X.map((x0, n) => ({ txt: { m: '교환기', t: 'kube-proxy' }, at: () => S.rules && [x0 + 51, 81], cls: 'pod' })),
-  { txt: { m: '자리배치 담당', t: 'kube-scheduler' }, at: () => [S.A.sch.x + 10, S.A.sch.feet - 18] },
+  { txt: { m: '자리배치 담당', t: 'kube-scheduler' }, s: { m: '배치', t: 'sched' }, at: () => [S.A.sch.x + 10, S.A.sch.feet - 18] },
   ...ROOM_X.map((x0, n) => ({ room: n, txt: ROOMS[n], at: () => [x0 + 2, 79], cls: 'room' })),
-  ...ROOM_X.map((x0, n) => ({ txt: { m: '층 관리자', t: 'kubelet' }, at: () => [S.kub[n].x + 7, S.kub[n].feet - 18] })),
+  ...ROOM_X.map((x0, n) => ({ txt: { m: '층 관리자', t: 'kubelet' }, s: { m: '관리자', t: 'kubelet' }, at: () => [S.kub[n].x + 7, S.kub[n].feet - 18] })),
   { txt: { m: '예약', t: 'requests' }, at: () => S.gauge && [ROOM_X[1] + 36, gaugeY(S.gauge.req) + 3], cls: 'pod' },
   { txt: { m: '칸막이', t: 'limits' }, at: () => S.gauge && [ROOM_X[1] + 36, gaugeY(S.gauge.lim) + 3], cls: 'pod' },
   { txt: { m: '서류', t: 'mem' }, at: () => S.gauge && [GAUGE.xs.mem + 2.5, 117], cls: 'pod' },
   { txt: { m: '손', t: 'cpu' }, at: () => S.gauge && [GAUGE.xs.cpu + 2.5, 117], cls: 'pod' },
 ];
-STATIC_TAGS.forEach((s) => { s.el = makeTag(s.txt, s.cls); });
+STATIC_TAGS.forEach((s) => { s.el = makeTag(s.txt, s.cls, s.s); });
 
 // 층 이름표: 창가 · 공사 중 표시가 장면마다 달라진다
 function refreshRoomTags() {
@@ -2767,7 +2842,8 @@ function reset() {
 
 function podAt(x, y) {
   if (!SC.clickPods) return null;
-  return S.pods.find((p) => p.state === 'run' && x >= p.x && x < p.x + 12 && y >= p.feet - 17 && y <= p.feet);
+  const pad = cv.clientWidth < 700 ? 4 : 0;   // 폰: 손가락으로 누르기 쉽게 (옆 책상과는 24 떨어져 안 겹침)
+  return S.pods.find((p) => p.state === 'run' && x >= p.x - pad && x < p.x + 12 + pad && y >= p.feet - 17 - pad && y <= p.feet + pad);
 }
 function roomAt(x, y) {
   if (!SC.clickRooms || S.phase !== 'idle' || S.used) return null;
@@ -2831,6 +2907,8 @@ const SCENES = [
 function switchScene(sc) {
   SC = sc;
   SCENES.forEach((s) => s.btn.classList.toggle('on', s.sc === sc));
+  const on = SCENES.find((s) => s.sc === sc).btn;
+  on.parentNode.scrollLeft = on.offsetLeft - on.parentNode.offsetLeft - 8;
   reset();
 }
 SCENES.forEach((s) => {
@@ -2862,13 +2940,270 @@ function frame(ts) {
   requestAnimationFrame(frame);
 }
 
+// ===== 11. 처음 화면 · 도감 =====
+
+let screen = 'home', dexFrom = 'home';
+function show(name) {
+  screen = name;
+  $('home').hidden = name !== 'home';
+  $('dex').hidden = name !== 'dex';
+  $('simScreen').hidden = name !== 'sim';
+  document.body.classList.toggle('dark', name !== 'sim');
+  window.scrollTo(0, 0);
+}
+
+// 작은 도트 그림: r(x, y, w, h, 색) 으로 칠한다
+function pix(w, h, fn) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  fn((x, y, ww, hh, col) => { g.fillStyle = col; g.fillRect(x, y, ww, hh); }, g);
+  return c;
+}
+
+// 처음 화면 그림: 회사 건물(위 = 본사, 아래 = 층 3개) 옆에 나(관리자)
+function drawTitle() {
+  const g = $('titleCv').getContext('2d');
+  g.imageSmoothingEnabled = false;
+  const r = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+  const O = PALETTE.o;
+  r(0, 0, 160, 120, '#a9d3ec');                                    // 하늘
+  r(128, 10, 12, 12, '#ffe27a'); r(126, 12, 16, 8, '#ffe27a'); r(130, 8, 8, 16, '#ffe27a');
+  r(100, 30, 22, 5, '#fffdf5'); r(95, 33, 34, 4, '#fffdf5');       // 구름
+  r(0, 104, 160, 16, '#a3a0ab'); r(0, 104, 160, 1, O);              // 길
+  for (let x = 8; x < 160; x += 16) r(x, 105, 1, 15, '#94919e');
+  // 간판 K8S
+  r(38, 8, 34, 13, O); r(39, 9, 32, 11, '#e8734a');
+  const GLYPH = [['1.1', '1.1', '11.', '1.1', '1.1'], ['111', '1.1', '111', '1.1', '111'], ['111', '1..', '111', '..1', '111']];
+  GLYPH.forEach((rows, i) => rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === '1') r(44 + i * 8 + x * 2, 10 + y * 2, 2, 2, '#fffdf5');
+  })));
+  // 건물
+  r(12, 20, 86, 85, O);
+  r(13, 21, 84, 26, '#f3e6c8');                                    // 본사
+  r(13, 48, 84, 2, '#b9a07a');                                     // 본사와 층 사이
+  [[13, 27], [41, 27], [69, 28]].forEach(([x, w]) => r(x, 51, w, 53, '#efe2c6'));   // 층 3개
+  const win = (x, y, who) => {
+    r(x - 1, y - 1, 14, 11, O); r(x, y, 12, 9, '#bfe3f2');
+    if (who) { r(x + 4, y + 2, 4, 2, who.h); r(x + 4, y + 4, 4, 3, PALETTE.s); r(x + 3, y + 7, 6, 2, who.t); }
+  };
+  win(20, 28, LOOKS.sch); win(49, 28, LOOKS.api); win(78, 28, LOOKS.rs);
+  const E = LOOKS.emp;
+  win(20, 58, E[0]); win(20, 80, E[1]);
+  win(48, 58, E[2]);
+  win(76, 58, null); win(76, 80, E[3]);
+  r(46, 83, 16, 21, O); r(47, 84, 14, 20, '#8fc4e4'); r(54, 84, 1, 20, O);   // 문
+  r(51, 93, 2, 1, O); r(56, 93, 2, 1, O);
+  g.drawImage(SPR.me.left.stand, 114, 70, 24, 34);                 // 나(관리자), 두 배 크기
+}
+
+// ----- 도감 그림 -----
+const O_ = PALETTE.o;
+const bld = (hi) => pix(19, 12, (r) => {
+  r(0, 0, 19, 12, O_);
+  r(1, 1, 17, 4, hi === 'top' ? '#ffe27a' : '#f3e6c8');
+  r(3, 2, 2, 2, '#bfe3f2'); r(14, 2, 2, 2, '#bfe3f2');
+  [1, 7, 13].forEach((x, i) => {
+    r(x, 6, 5, 5, hi === 'room' && i === 0 ? '#ffe27a' : '#efe2c6');
+    r(x + 1, 7, 2, 1, PALETTE.s); r(x + 1, 8, 2, 2, '#8fb8e8');
+  });
+});
+const paper = (band, mark) => pix(10, 13, (r) => {
+  r(0, 0, 10, 13, O_); r(1, 1, 8, 11, '#fffdf5'); r(1, 1, 8, 3, band);
+  [6, 8, 10].forEach((y, i) => r(2, y, i === 2 ? 4 : 6, 1, '#c9c6d6'));
+  if (mark === 'dots') [6, 8, 10].forEach((y) => r(2, y, 1, 1, '#4f9a7a'));
+  if (mark === 'check') { r(4, 9, 1, 1, '#4f9a7a'); r(5, 10, 1, 1, '#4f9a7a'); r(6, 9, 1, 1, '#4f9a7a'); r(7, 8, 1, 1, '#4f9a7a'); r(8, 7, 1, 1, '#4f9a7a'); }
+});
+const door = (tape) => pix(16, 16, (r) => {
+  r(0, 3, 16, 13, O_); r(1, 4, 14, 12, '#efe2c6');
+  r(4, 6, 8, 10, O_); r(5, 7, 6, 9, '#a8693f');
+  for (let x = 0; x < 16; x++) for (let y = 0; y < 3; y++) r(x, y, 1, 1, Math.floor((x + y) / 3) % 2 ? tape : O_);
+  for (let i = 0; i < 4; i++) { r(5 + i, 8 + i * 2, 1, 2, tape); r(10 - i, 8 + i * 2, 1, 2, tape); }
+});
+const gauge = (col, y) => pix(14, 16, (r) => {
+  r(3, 0, 8, 16, O_); r(4, 1, 6, 14, '#efe2c6'); r(4, 9, 6, 6, '#8fb8e8'); r(0, y, 14, 1, col);
+});
+const book = (r, x, y, col) => { r(x, y, 4, 12 - y, O_); r(x + 1, y + 1, 2, 10 - y, col); };
+const QM = (col) => makeSprite(['.iii.', 'i...i', '...i.', '..i..', '.....', '..i..'], { i: col });
+const CHECK = makeSprite(['....g', '...g.', 'g.g..', '.g...'], { g: '#4f9a7a' });
+const PHONE = ['.ooooo.', 'oiiiiio', 'oio.oio', 'oo...oo'];
+const stand = (set) => set.right.stand;
+const withMark = (person, mark, mx = 16, my = 2) => pix(24, 20, (r, g) => { g.drawImage(person, 3, 2); g.drawImage(mark, mx, my); });
+const lying = (zz) => pix(24, 20, (r, g) => {
+  g.save(); g.translate(2, 18); g.rotate(-Math.PI / 2); g.drawImage(stand(SPR.empSleep[1]), 0, 0); g.restore();
+  if (zz) g.drawImage(SPR.zz, 17, 1);
+});
+
+const ALL = 'all';
+const DEX = [
+  // 사람
+  { g: '사람', m: '직원', t: 'Pod', art: () => stand(SPR.emp[0]), sc: ALL,
+    d: '실제로 일하는 단위. 그만두면 같은 사람이 돌아오지 않고, 이름·내선번호가 다른 새 직원이 들어옴.' },
+  { g: '사람', m: '나(관리자)', t: 'kubectl', art: () => stand(SPR.me), sc: [1, 3, 4, 6, 7],
+    d: '원하는 상태를 서류로 써서 창구에 냄. 직원을 직접 뽑거나 앉히지 않음.' },
+  { g: '사람', m: '창구직원', t: 'kube-apiserver', art: () => stand(SPR.api), sc: ALL,
+    d: '모든 서류가 지나가는 입구. 서류 검사(인증·인가·어드미션)는 깐깐하지만, 결정은 안 하고 장부에 적고 알리기만 함.' },
+  { g: '사람', m: '자리배치 담당', t: 'kube-scheduler', art: () => stand(SPR.sch), sc: [1, 2, 3, 4, 6, 7],
+    d: '층이 정해지지 않은 직원에게 층을 정해 줌. 조건이 안 맞는 층은 거르고, 남은 층에 점수를 매겨 고름.' },
+  { g: '사람', m: '정원 담당', t: 'ReplicaSet 컨트롤러', art: () => stand(SPR.rs), sc: [1, 3, 4, 6, 7],
+    d: '정원표의 인원과 실제 직원 수를 맞춤. 모자라면 새 직원을 요청하고, 넘치면 내보냄.' },
+  { g: '사람', m: '기획 담당', t: 'Deployment 컨트롤러', art: () => stand(SPR.dep), sc: [3, 6],
+    d: '운영 계획서를 보고 정원표를 만듦. 매뉴얼이 바뀌면 새 정원표를 만들어 직원을 조금씩 옮김.' },
+  { g: '사람', m: '층 관리자', t: 'kubelet', art: () => stand(SPR.kub), sc: ALL,
+    d: '층마다 한 명. 배정된 직원을 실제로 앉히고 상태를 확인함. 쓰러진 직원은 같은 자리에서 다시 일으킴.' },
+  { g: '사람', m: '층 점검 담당', t: 'Node 컨트롤러', art: () => stand(SPR.nc), sc: [4],
+    d: '층마다 오는 살아있음 신호(♥)를 지켜봄. 신호가 끊기면 그 층을 연락 두절로 표시함.' },
+  { g: '사람', m: '명단 담당', t: 'EndpointSlice 컨트롤러', art: () => stand(SPR.ep), sc: [7],
+    d: '대표번호로 연결할 직원 명단을 고침. 준비 안 된 직원은 명단에서 뺌.' },
+  { g: '사람', m: '번호 안내', t: 'CoreDNS', sc: [7],
+    art: () => pix(18, 11, (r, g) => { g.drawImage(SPR.desk, 1, 5); r(3, 0, 7, 5, O_); r(4, 1, 5, 3, '#f5b93a'); r(12, 1, 6, 4, O_); r(13, 2, 4, 2, '#e8434a'); }),
+    d: '부서 이름을 물으면 대표번호를 알려 줌. 그림에선 본사에 앉혔지만 실제로는 이것도 Pod임.' },
+
+  // 장소·물건
+  { g: '장소·물건', m: '회사', t: '클러스터', art: () => bld(null), sc: ALL,
+    d: '본사와 층 전체. 쿠버네티스가 관리하는 범위.' },
+  { g: '장소·물건', m: '본사', t: '컨트롤 플레인', art: () => bld('top'), sc: ALL,
+    d: '판단하고 기록하는 담당자들이 모인 곳(그림 위쪽). 일하는 직원은 아래 층에서 일함.' },
+  { g: '장소·물건', m: '층', t: '노드', art: () => bld('room'), sc: ALL,
+    d: '직원이 실제로 일하는 곳(서버 한 대). 책상 수만큼만 앉을 수 있음.' },
+  { g: '장소·물건', m: '책상', t: '노드 자원', art: () => SPR.desk, sc: [1, 2, 3],
+    d: '층마다 2개 = 층 용량. 실제 사용량이 아니라 예약(requests) 합계로 셈.' },
+  { g: '장소·물건', m: '장부', t: 'etcd', sc: ALL,
+    art: () => pix(11, 16, (r) => { r(0, 0, 11, 16, O_); r(1, 1, 9, 14, '#c9c6d6'); [1, 6, 11].forEach((y) => { r(1, y, 9, 4, O_); r(2, y + 1, 7, 2, '#e4e1ec'); r(4, y + 2, 3, 1, O_); }); }),
+    d: '회사의 모든 기록. 창구직원만 쓰고, 다른 담당자는 창구를 통해서만 봄.' },
+  { g: '장소·물건', m: '서류 봉투', t: 'API 요청', art: () => SPR.env, sc: ALL,
+    d: '담당자 사이를 오가는 서류. 누가 보내든 반드시 창구를 거침.' },
+  { g: '장소·물건', m: '사내 방송', t: 'watch', sc: ALL,
+    art: () => pix(20, 16, (r, g) => { for (let a = 0; a < Math.PI * 2; a += 0.3) r(Math.round(10 + Math.cos(a) * 9), Math.round(8 + Math.sin(a) * 7), 1, 1, '#e8434a'); g.drawImage(SPR.bang, 8, 4); }),
+    d: '장부가 바뀌면 창구직원이 알림. 듣고 있던 담당자 머리 위에 ! 가 뜨고 움직임.' },
+  { g: '장소·물건', m: '운영 계획서', t: 'Deployment', art: () => paper('#5fb3b3'), sc: [3, 6],
+    d: '몇 명을 어떤 매뉴얼로 둘지 적은 계획. 직원을 직접 만들지 않고 정원표를 통해 만듦.' },
+  { g: '장소·물건', m: '정원표', t: 'ReplicaSet', art: () => paper('#7cc27e'), sc: [1, 3, 6],
+    d: '매뉴얼 판마다 하나. 옛 정원표는 0명으로 남겨 두고, 되돌릴 때 다시 씀.' },
+  { g: '장소·물건', m: '매뉴얼', t: '컨테이너 이미지', sc: [3, 6],
+    art: () => pix(14, 12, (r) => { book(r, 0, 2, VER_COL.v1); book(r, 5, 0, VER_COL.v2); book(r, 10, 3, VER_COL.v3); }),
+    d: '직원이 일하는 방법(v1·v2·v3). 판이 바뀌면 직원을 고치지 않고 새 직원으로 교체함.' },
+  { g: '장소·물건', m: '대표번호', t: 'Service', art: () => makeSprite(PHONE), sc: [7],
+    d: '부서의 고정 번호(ClusterIP). 받는 직원이 바뀌어도 번호는 그대로임.' },
+  { g: '장소·물건', m: '내선번호', t: 'Pod IP', art: () => makeSprite(PHONE, { i: '#8fb8e8' }), sc: [7],
+    d: '직원마다 다른 번호. 새 직원이 오면 번호도 바뀜.' },
+  { g: '장소·물건', m: '연결 명단', t: 'EndpointSlice', art: () => paper('#e89ac8', 'dots'), sc: [7],
+    d: '대표번호로 받을 수 있는 직원들의 내선번호 목록.' },
+  { g: '장소·물건', m: '교환기', t: 'kube-proxy', sc: [7],
+    art: () => pix(16, 10, (r) => { r(0, 0, 16, 10, O_); r(1, 1, 14, 8, '#c9c6d6'); for (let i = 0; i < 4; i++) r(3 + i * 3, 4, 2, 2, i < 3 ? '#4f9a7a' : '#8a7a6a'); }),
+    d: '층마다 하나. 명단대로 연결 규칙을 써 둠. 전화는 교환기를 거치지 않고 규칙대로 바로 감.' },
+
+  // 표시·상태
+  { g: '표시·상태', m: '창가', t: '노드 라벨', sc: [2],
+    art: () => pix(20, 14, (r) => { r(0, 0, 20, 14, O_); r(1, 1, 18, 12, '#bfe3f2'); r(9, 1, 2, 12, O_); r(1, 6, 18, 2, O_); }),
+    d: '층에 붙인 특징 표시. 창가를 원하는 직원은 창가 층에만 앉음.' },
+  { g: '표시·상태', m: '공사 중 줄무늬', t: 'taint', art: () => door('#f5b93a'), sc: [2],
+    d: '이 층엔 오지 말라는 표시. 허가증이 없는 직원은 배치되지 않음.' },
+  { g: '표시·상태', m: '공사 허가증', t: 'toleration', art: () => paper('#f5b93a', 'check'), sc: [2],
+    d: '줄무늬 층에도 앉을 수 있다는 허가. 그 층으로 보내 주지는 않음.' },
+  { g: '표시·상태', m: '로비 대기', t: 'Pending', sc: [2],
+    art: () => pix(24, 20, (r, g) => { g.globalAlpha = 0.45; g.drawImage(stand(SPR.emp[2]), 6, 2); }),
+    d: '앉을 층이 없어 로비에서 기다리는 상태. 조건이 맞는 자리가 생기면 배치됨.' },
+  { g: '표시·상태', m: '살아있음 신호 ♥', t: 'Lease 갱신', art: () => SPR.heart, sc: [4],
+    d: '층 관리자가 10초마다 보내는 신호. 끊기면 층 점검 담당이 알아챔.' },
+  { g: '표시·상태', m: '빨간 출입 금지', t: 'unreachable taint', art: () => door('#e8434a'), sc: [4],
+    d: '연락이 끊긴 층 표시. 5분 기다린 뒤 그 층 직원은 퇴사 처리되고, 다른 층에 새 직원을 뽑음.' },
+  { g: '표시·상태', m: '일 못 함 보고', t: 'NotReady', art: () => door('#ff9a5a'), sc: [4],
+    d: '층 관리자가 "일 못 함"을 알린 상태(주황 줄무늬). 5분 뒤 다른 층에 새 직원을 뽑음.' },
+  { g: '표시·상태', m: '배치 금지', t: 'cordon', art: () => door('#8fb8e8'), sc: [4],
+    d: '새 직원을 보내지 않는다는 표시(파란 줄무늬). 있던 직원은 그대로 일함.' },
+  { g: '표시·상태', m: '예약 크기', t: 'requests', art: () => gauge('#4f9a7a', 8), sc: [5],
+    d: '직원이 쓰겠다고 예약한 양(초록 줄). 자리배치 담당은 이 값만 보고 층을 정함.' },
+  { g: '표시·상태', m: '칸막이', t: 'limits', art: () => gauge('#e8434a', 4), sc: [5],
+    d: '넘을 수 없는 한도(빨간 줄). 서류(메모리)가 넘치면 쓰러지고, 손(CPU)이 넘치면 느려지기만 함.' },
+  { g: '표시·상태', m: '쓰러짐', t: 'OOMKilled', art: () => lying(false), sc: [5],
+    d: '메모리 한도를 넘겨 컨테이너가 강제로 끝남. 퇴사가 아니라 같은 자리에서 다시 일어남.' },
+  { g: '표시·상태', m: '재시작 대기', t: 'CrashLoopBackOff', art: () => lying(true), sc: [5],
+    d: '계속 쓰러지면 다시 일으키기 전 기다림이 10→20→40초… 로 늘어남. 최대 5분.' },
+  { g: '표시·상태', m: '출근 확인', t: 'startup probe', art: () => withMark(stand(SPR.emp[3]), CHECK, 17, 3), sc: [6],
+    d: '처음 일을 시작했는지 확인함. 이게 끝나기 전엔 다른 확인을 안 함.' },
+  { g: '표시·상태', m: '"괜찮나?"', t: 'liveness probe', art: () => withMark(stand(SPR.empSleep[4]), QM('#e8434a')), sc: [6],
+    d: '멍해져 답이 없으면(3번 실패) 다시 깨움 = 컨테이너 재시작.' },
+  { g: '표시·상태', m: '"준비 됐나?"', t: 'readiness probe', art: () => withMark(stand(SPR.emp[5]), QM('#4f9a7a')), sc: [6, 7],
+    d: '바빠서 준비 안 됐다고 하면 새 일(전화)만 안 보냄. 재시작은 안 함.' },
+  { g: '표시·상태', m: '진행 실패', t: 'ProgressDeadlineExceeded', sc: [6],
+    art: () => pix(13, 13, (r) => { r(1, 1, 11, 11, '#e8434a'); r(2, 2, 9, 9, '#fffdf5'); r(6, 3, 1, 4, O_); r(6, 6, 3, 1, O_); }),
+    d: '정해진 시간(기본 10분) 안에 교체가 안 끝남. 기록만 하고 자동으로 되돌리지 않음.' },
+  { g: '표시·상태', m: '되돌리기', t: 'rollout undo', sc: [6],
+    art: () => pix(22, 12, (r) => { book(r, 0, 1, VER_COL.v1); book(r, 18, 1, VER_COL.v3); r(7, 6, 8, 1, O_); r(8, 5, 1, 3, O_); r(9, 4, 1, 5, O_); }),
+    d: '옛 정원표를 다시 늘려 이전 매뉴얼로 돌아감.' },
+];
+
+const CIRC = '①②③④⑤⑥⑦';
+function dexArt(src) {   // 24x20 칸 가운데에. 작은 그림은 두 배로
+  const c = document.createElement('canvas');
+  c.width = 24; c.height = 20;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  const k = src.width * 2 <= 24 && src.height * 2 <= 20 ? 2 : 1;
+  const w = src.width * k, h = src.height * k;
+  g.drawImage(src, Math.floor((24 - w) / 2), Math.floor((20 - h) / 2), w, h);
+  return c;
+}
+function openScene(n) {
+  if (SC !== SCENES[n - 1].sc) switchScene(SCENES[n - 1].sc);
+  show('sim');
+}
+function renderDex() {
+  const box = $('dexBody');
+  box.innerHTML = '';
+  ['사람', '장소·물건', '표시·상태'].forEach((grp) => {
+    const h = document.createElement('h3');
+    h.textContent = grp;
+    box.appendChild(h);
+    const list = document.createElement('div');
+    list.className = 'dexlist';
+    DEX.filter((e) => e.g === grp).forEach((e) => {
+      const it = document.createElement('div');
+      it.className = 'dexit';
+      const art = dexArt(e.art());
+      art.className = 'art';
+      it.appendChild(art);
+      const tx = document.createElement('div');
+      const add = (cls, text) => { const d = document.createElement('div'); d.className = cls; d.textContent = text; tx.appendChild(d); return d; };
+      add('nm', e.m);
+      add('tm', e.t);
+      add('ds', e.d);
+      const scs = add('scs', e.sc === ALL ? '모든 장면' : '나오는 장면');
+      if (e.sc !== ALL) e.sc.forEach((n) => {
+        const b = document.createElement('button');
+        b.textContent = CIRC[n - 1];
+        b.title = SCENES[n - 1].m;
+        b.addEventListener('click', () => openScene(n));
+        scs.appendChild(b);
+      });
+      it.appendChild(tx);
+      list.appendChild(it);
+    });
+    box.appendChild(list);
+  });
+  $('dexCount').textContent = `용어 ${DEX.length}개`;
+}
+
+$('startSub').textContent = `장면 ${SCENES.length}개`;
+$('dexSub').textContent = `용어 ${DEX.length}개`;
+$('goStart').addEventListener('click', () => show('sim'));
+$('goDex').addEventListener('click', () => { dexFrom = 'home'; show('dex'); });
+$('toDex').addEventListener('click', () => { dexFrom = 'sim'; show('dex'); });
+$('toHome').addEventListener('click', () => show('home'));
+$('dexBack').addEventListener('click', () => show(dexFrom));
+drawTitle();
+renderDex();
+
 reset();
 setMode('m');
 requestAnimationFrame(frame);
 
 window.sim = {
   get S() { return S; }, setMode, next, replay, reset, clickPod, choose, CHOICES2,
-  scene: (i) => switchScene(SCENES[i - 1].sc), get cur() { return cur; }, get busy() { return busy; },
+  scene: (i) => { show('sim'); switchScene(SCENES[i - 1].sc); }, show, get screen() { return screen; }, DEX,
+  get cur() { return cur; }, get busy() { return busy; },
 };
 </script>
 </body>
