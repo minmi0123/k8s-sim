@@ -60,35 +60,39 @@
   .nav button { font: inherit; font-size: 12px; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; }
   .tag .short { display: none; }
 
-  /* 처음 화면 · 도감 (어두운 화면) */
-  body.dark { background: #1d1a22; }
-  .screen { --bg: #1d1a22; --panel: #2b2733; --raise: #3a3445; --sink: #15131a; --line: #e9e2d6; --text: #f1ece4; --muted: #a39cae; --hi: #ffe27a;
-            color: var(--text); max-width: 520px; margin: 0 auto; min-height: 100vh; border-left: 2px solid var(--panel); border-right: 2px solid var(--panel); }
+  /* 처음 화면 · 도감 — 장면 화면과 같은 색 */
+  .screen { max-width: 520px; margin: 0 auto; min-height: 100vh; }
   #home { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 18px; text-align: center; }
-  #home .ttl { font-size: 27px; letter-spacing: -1px; margin: 0 0 6px; color: var(--hi); text-shadow: 3px 3px 0 var(--sink); }
-  #home .tagline { font-size: 12.5px; color: var(--muted); margin-bottom: 20px; }
-  #titleCv { width: 100%; max-width: 360px; border: 2px solid var(--line); margin-bottom: 22px; image-rendering: pixelated; image-rendering: crisp-edges; }
+  #home .ttl { font-size: 27px; letter-spacing: -1px; margin: 0 0 6px; color: var(--ink); text-shadow: 3px 3px 0 #e2cfa6; }
+  #home .tagline { font-size: 12.5px; color: #7a6a6a; margin-bottom: 20px; }
+  #titleCv { width: 100%; max-width: 360px; border: 3px solid var(--ink); border-radius: 4px; margin-bottom: 22px; image-rendering: pixelated; image-rendering: crisp-edges; }
   #home .menu { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 280px; }
-  #home .menu button { border: 2px solid var(--line); background: var(--panel); color: var(--text); padding: 13px; font: inherit; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 var(--sink); }
-  #home .menu button .s { display: block; font-size: 11px; font-weight: normal; color: var(--muted); margin-top: 3px; }
-  @media (hover: hover) { #home .menu button:hover { background: var(--hi); color: #1d1a22; } #home .menu button:hover .s { color: #1d1a22; } }
-  #home .menu button:active { background: var(--raise); transform: translateY(4px); box-shadow: none; }
-  #dex { max-width: 760px; padding: 12px 14px 30px; }
-  .dexhead { display: flex; align-items: center; gap: 10px; position: sticky; top: 0; background: var(--bg); padding: 6px 0 8px; border-bottom: 2px solid var(--line); z-index: 2; }
-  .dexhead h2 { font-size: 18px; margin: 0; color: var(--hi); }
-  .dexhead span { margin-left: auto; font-size: 12px; color: var(--muted); }
-  .dexhead button, .dexit .scs button { font: inherit; border: 2px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
-  .dexhead button { font-size: 13px; padding: 4px 10px; }
-  #dex h3 { font-size: 14px; color: var(--muted); margin: 18px 0 8px; }
+  #home .menu button { border: 2px solid var(--ink); border-radius: 6px; background: #fff; color: var(--ink); padding: 13px; font: inherit; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 var(--ink); }
+  #home .menu button.main { background: var(--accent); color: #fff; }
+  #home .menu button .s { display: block; font-size: 11px; font-weight: normal; color: #7a6a6a; margin-top: 3px; }
+  #home .menu button.main .s { color: #fff3d6; }
+  @media (hover: hover) { #home .menu button:hover { background: #fff3d6; } #home .menu button.main:hover { background: #ef8a62; } }
+  #home .menu button:active { transform: translateY(4px); box-shadow: none; }
+  #dex { max-width: 760px; padding: 0 14px 30px; }
+  .dexhead { position: sticky; top: 0; background: #efe6d2; padding: 10px 0 8px; border-bottom: 2px solid var(--ink); z-index: 2; }
+  .dexhead .row { display: flex; align-items: center; gap: 10px; }
+  .dexhead h2 { font-size: 18px; margin: 0; color: var(--ink); }
+  .dexhead .cnt { margin-left: auto; font-size: 12px; color: #7a6a6a; }
+  .dexhead button, .dexit .scs button { font: inherit; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; }
+  .dexhead .row button { font-size: 13px; padding: 4px 10px; }
+  .dexnav { display: flex; gap: 4px; margin-top: 8px; }
+  .dexnav button { font-size: 13px; padding: 3px 12px; }
+  .dexnav button.on { background: var(--ink); color: #fff; }
+  #dex h3 { font-size: 14px; color: #7a6a6a; margin: 18px 0 8px; }
   .dexlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 6px; }
-  .dexit { display: flex; gap: 10px; align-items: flex-start; border: 2px solid var(--line); background: var(--panel); padding: 7px 8px; }
-  .dexit .art { flex: none; width: 72px; height: 60px; background: #f3e6c8; border: 2px solid var(--line); image-rendering: pixelated; image-rendering: crisp-edges; }
-  .dexit .nm { font-weight: bold; font-size: 15px; color: var(--hi); }
-  .dexit .tm { font-size: 12px; color: var(--muted); }
+  .dexit { display: flex; gap: 10px; align-items: flex-start; border: 2px solid var(--ink); border-radius: 6px; background: var(--paper); padding: 7px 8px; }
+  .dexit .art { flex: none; width: 72px; height: 60px; background: #f3e6c8; border: 2px solid var(--ink); border-radius: 3px; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .dexit .nm { font-weight: bold; font-size: 15px; color: var(--ink); }
+  .dexit .tm { font-size: 12px; color: var(--accent); font-weight: bold; }
   .dexit .ds { font-size: 13px; line-height: 1.45; margin-top: 3px; }
-  .dexit .scs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; font-size: 11px; color: var(--muted); align-items: center; }
+  .dexit .scs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; font-size: 11px; color: #7a6a6a; align-items: center; }
   .dexit .scs button { font-size: 12px; padding: 0 5px; }
-  @media (hover: hover) { .dexhead button:hover, .dexit .scs button:hover { background: var(--hi); color: #1d1a22; } }
+  @media (hover: hover) { .dexhead button:not(.on):hover, .dexit .scs button:hover { background: #fff3d6; } }
 
   /* 폰: 장면 탭은 옆으로 넘기는 한 줄, 이름표는 작고 짧게 */
   @media (max-width: 700px) {
@@ -108,19 +112,22 @@
   }
 </style>
 </head>
-<body class="dark">
+<body>
 <div id="home" class="screen">
   <h2 class="ttl">쿠버네티스 회사</h2>
   <div class="tagline">장면으로 보는 쿠버네티스</div>
   <canvas id="titleCv" width="160" height="120"></canvas>
   <div class="menu">
-    <button id="goStart">시작하기<span class="s" id="startSub"></span></button>
+    <button id="goStart" class="main">시작하기<span class="s" id="startSub"></span></button>
     <button id="goDex">도감<span class="s" id="dexSub"></span></button>
   </div>
 </div>
 
 <div id="dex" class="screen" hidden>
-  <div class="dexhead"><button id="dexBack">← 돌아가기</button><h2>용어 도감</h2><span id="dexCount"></span></div>
+  <div class="dexhead">
+    <div class="row"><button id="dexBack">← 돌아가기</button><h2>용어 도감</h2><span class="cnt" id="dexCount"></span></div>
+    <div class="dexnav" id="dexNav"></div>
+  </div>
   <div id="dexBody"></div>
 </div>
 
@@ -2948,8 +2955,8 @@ function show(name) {
   $('home').hidden = name !== 'home';
   $('dex').hidden = name !== 'dex';
   $('simScreen').hidden = name !== 'sim';
-  document.body.classList.toggle('dark', name !== 'sim');
   window.scrollTo(0, 0);
+  if (name === 'dex') { spyHold = 0; dexNavOn(0); }
 }
 
 // 작은 도트 그림: r(x, y, w, h, 색) 으로 칠한다
@@ -3136,6 +3143,19 @@ const DEX = [
 ];
 
 const CIRC = '①②③④⑤⑥⑦';
+const DEX_GROUPS = ['사람', '장소·물건', '표시·상태'];
+let spyHold = 0;
+const dexNavOn = (i) => [...$('dexNav').children].forEach((b, k) => b.classList.toggle('on', k === i));
+function dexSpy() {   // 머리 바로 아래를 지난 마지막 묶음을 켬. 맨 끝이면 마지막 묶음
+  if (screen !== 'dex' || performance.now() < spyHold) return;
+  const line = $('dex').querySelector('.dexhead').getBoundingClientRect().bottom + 8;
+  const hs = [...$('dexBody').querySelectorAll('h3')];
+  let on = 0;
+  hs.forEach((h, k) => { if (h.getBoundingClientRect().top <= line) on = k; });
+  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) on = hs.length - 1;
+  dexNavOn(on);
+}
+window.addEventListener('scroll', dexSpy, { passive: true });
 function dexArt(src) {   // 24x20 칸 가운데에. 작은 그림은 두 배로
   const c = document.createElement('canvas');
   c.width = 24; c.height = 20;
@@ -3153,10 +3173,19 @@ function openScene(n) {
 function renderDex() {
   const box = $('dexBody');
   box.innerHTML = '';
-  ['사람', '장소·물건', '표시·상태'].forEach((grp) => {
+  $('dexNav').innerHTML = '';
+  DEX_GROUPS.forEach((grp, i) => {
     const h = document.createElement('h3');
     h.textContent = grp;
     box.appendChild(h);
+    const nb = document.createElement('button');
+    nb.textContent = grp;
+    nb.addEventListener('click', () => {
+      spyHold = performance.now() + 900;   // 부드럽게 내려가는 동안 중간 묶음이 켜지지 않게
+      dexNavOn(i);
+      window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - $('dex').querySelector('.dexhead').offsetHeight - 4, behavior: 'smooth' });
+    });
+    $('dexNav').appendChild(nb);
     const list = document.createElement('div');
     list.className = 'dexlist';
     DEX.filter((e) => e.g === grp).forEach((e) => {
