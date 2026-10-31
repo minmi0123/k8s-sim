@@ -176,6 +176,7 @@ const LOOKS = {
   dep: { h: '#4a3428', t: '#5fb3b3', p: '#3d4a6a' },
   nc:  { h: '#2f2a3a', t: '#a8c66c', p: '#4f6a5a' },
   kub: { h: '#f5b93a', t: '#46598f', p: '#3d4a6a' }, // 노란 머리 = 안전모
+  ep:  { h: '#5a3a2a', t: '#e89ac8', p: '#5a4a6a' },
   emp: [
     { h: '#5a3a2a', t: '#8fb8e8' }, { h: '#3a2a22', t: '#f29a9a' }, { h: '#a8693f', t: '#ffe27a' },
     { h: '#2f2a3a', t: '#9fd6c8' }, { h: '#7a4a2e', t: '#f7b6c8' }, { h: '#4a3428', t: '#c9c6d6' },
@@ -190,6 +191,8 @@ const SPR = {
   sch: makePerson(LOOKS.sch),
   dep: makePerson(LOOKS.dep),
   nc: makePerson(LOOKS.nc),
+  ep: makePerson(LOOKS.ep),
+  phone: makeSprite(['.ooooo.', 'oiiiiio', 'oio.oio', 'oo...oo']),
   heart: makeSprite(['.i.i.', 'iiiii', '.iii.', '..i..']),
   kub: makePerson(LOOKS.kub),
   emp: LOOKS.emp.map((l) => makePerson(l)),
@@ -249,12 +252,12 @@ function initState() {
     apiAwake: false,
     drawer: 0,
     rooms: ROOM_X.map(() => ({ win: false, taint: false })), // 창가 = 라벨, 공사 중 = taint
-    pods: [], ledger: [], envs: [], rings: [], bangs: [], hearts: [],
+    pods: [], ledger: [], envs: [], rings: [], bangs: [], hearts: [], calls: [],
     names: new Set(),
     phase: 'idle', victim: null, fresh: null, target: null, plan: null, used: false,
   };
   SC.init();
-  S.pods.forEach((p) => { p.state = 'run'; S.ledger.push({ id: p.id, node: p.node, st: 'run', rs: p.rs }); });
+  S.pods.forEach((p) => { p.state = 'run'; if (!p.noLedger) S.ledger.push({ id: p.id, node: p.node, st: 'run', rs: p.rs }); });
 }
 
 // 층 n 에서 쓰고 있는 책상 칸 수 (종료 중인 직원도 자리를 차지한다)
@@ -287,6 +290,9 @@ const P = {
   sch: () => [S.A.sch.x + 6, S.A.sch.feet - 20],
   dep: () => [S.A.dep.x + 6, S.A.dep.feet - 20],
   nc: () => [S.A.nc.x + 6, S.A.nc.feet - 20],
+  ep: () => [S.A.ep.x + 6, S.A.ep.feet - 20],
+  dns: () => [193, 46],
+  sb: (n) => [ROOM_X[n] + 51, 86],
   api: () => [126, 42],
   kub: (n) => [S.kub[n].x + 6, S.kub[n].feet - 20],
   drawer: () => [161, 41],
@@ -347,6 +353,32 @@ function drawCabinet() {
   }
 }
 
+// 장면 ⑦: 번호 안내(CoreDNS) — 번호부와 전화기
+function drawDns() {
+  const on = S.dnsFlash > now && T % 12 < 6;
+  ctx.drawImage(SPR.desk, 185, 51);
+  rect(187, 46, 7, 5, PALETTE.o); rect(188, 47, 5, 3, on ? '#ffe27a' : '#f5b93a');
+  rect(196, 47, 6, 4, PALETTE.o); rect(197, 48, 4, 2, '#e8434a');
+}
+// 층마다 교환기(kube-proxy) — 불 켜진 칸 = 규칙에 있는 연결 대상 수
+function drawSwitchboards() {
+  ROOM_X.forEach((x0, n) => {
+    const x = x0 + 44, y = 83, on = S.sbFlash[n] > now && T % 12 < 6;
+    rect(x - 1, y - 1, 16, 10, PALETTE.o); rect(x, y, 14, 8, on ? '#ffe27a' : '#c9c6d6');
+    for (let i = 0; i < 4; i++) rect(x + 2 + i * 3, y + 3, 2, 2, i < S.rules[n].length ? '#4f9a7a' : '#8a7a6a');
+  });
+}
+// 전화 신호: 지나간 길은 점선, 머리는 수화기
+function pathAt(pts, p) {
+  const seg = pts.length - 1, t = Math.min(seg - 1e-6, p * seg), i = Math.floor(t), q = t - i;
+  return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * q, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * q];
+}
+function drawCall(pts, p) {
+  for (let k = 0; k <= 120 && k / 120 <= p; k += 2) { const [x, y] = pathAt(pts, k / 120); rect(x, y, 1, 1, '#e8734a'); }
+  const [x, y] = pathAt(pts, p);
+  ctx.drawImage(SPR.phone, Math.round(x - 3), Math.round(y - 2));
+}
+
 function drawRing(r) {
   ctx.globalAlpha = r.a;
   ctx.fillStyle = PALETTE.i;
@@ -369,6 +401,12 @@ function draw() {
     drawPerson(SPR.dep, S.A.dep.x, S.A.dep.feet + S.A.dep.dy);
     ctx.drawImage(SPR.desk, S.A.dep.x - 2, 51);
   }
+  if (S.A.ep) {                     // 명단 담당은 장면 ⑦
+    drawPerson(SPR.ep, S.A.ep.x, S.A.ep.feet + S.A.ep.dy);
+    ctx.drawImage(SPR.desk, S.A.ep.x - 2, 51);
+  }
+  if (S.dns) drawDns();
+  if (S.rules) drawSwitchboards();
   if (S.A.nc) {                     // 층 점검 담당은 장면 ④
     drawPerson(SPR.nc, S.A.nc.x, S.A.nc.feet + S.A.nc.dy);
     ctx.drawImage(SPR.desk, S.A.nc.x - 2, 51);
@@ -442,6 +480,7 @@ function draw() {
 
   S.rings.forEach(drawRing);
   S.envs.forEach((e) => ctx.drawImage(SPR.env, Math.round(e.x - 3), Math.round(e.y - 2)));
+  S.calls.forEach((c) => drawCall(c.pts, c.p));
   S.bangs.forEach((b) => ctx.drawImage(SPR.bang, Math.round(b.x - 2), Math.round(b.y - 14 - (Math.floor(T / 10) % 2))));
   drawEcho();
 }
@@ -467,6 +506,9 @@ const STATIC_TAGS = [
   { txt: { m: '정원 담당', t: 'ReplicaSet 컨트롤러' }, at: () => [S.A.rs.x + 6, S.A.rs.feet - 18] },
   { txt: { m: '기획 담당', t: 'Deployment 컨트롤러' }, at: () => S.A.dep && [S.A.dep.x + 6, S.A.dep.feet - 18] },
   { txt: { m: '층 점검 담당', t: 'Node 컨트롤러' }, at: () => S.A.nc && [S.A.nc.x + 6, S.A.nc.feet - 18] },
+  { txt: { m: '명단 담당', t: 'EndpointSlice 컨트롤러' }, at: () => S.A.ep && [S.A.ep.x + 6, S.A.ep.feet - 18] },
+  { txt: { m: '번호 안내', t: 'CoreDNS' }, at: () => S.dns && [193, 44] },
+  ...ROOM_X.map((x0, n) => ({ txt: { m: '교환기', t: 'kube-proxy' }, at: () => S.rules && [x0 + 51, 81], cls: 'pod' })),
   { txt: { m: '자리배치 담당', t: 'kube-scheduler' }, at: () => [S.A.sch.x + 10, S.A.sch.feet - 18] },
   ...ROOM_X.map((x0, n) => ({ room: n, txt: ROOMS[n], at: () => [x0 + 2, 79], cls: 'room' })),
   ...ROOM_X.map((x0, n) => ({ txt: { m: '층 관리자', t: 'kubelet' }, at: () => [S.kub[n].x + 7, S.kub[n].feet - 18] })),
@@ -490,7 +532,11 @@ function refreshRoomTags() {
 }
 
 const podTags = new Map();
-const podLabel = (p) => { const v = p.ver ? ` ${p.ver}` : ''; return { m: p.mn + v, t: `…${p.sfx}${v}` }; };
+const podLabel = (p) => {
+  if (p.ip) return { m: `${p.mn}${p.team ? `(${p.team})` : ''} ☎${p.ext}`, t: p.team ? `client ${p.ip}` : p.ip };   // 장면 ⑦: 내선번호 = Pod IP
+  const v = p.ver ? ` ${p.ver}` : '';
+  return { m: p.mn + v, t: `…${p.sfx}${v}` };
+};
 function updateTags() {
   STATIC_TAGS.forEach((s) => {
     const pos = s.at();
@@ -544,6 +590,11 @@ const RS_VER = { v1: RS_NAME, v2: 'web-7c5b8d9f6', v3: 'web-5f8d7c4b9' };
 const VER_COL = { v1: '#8fb8e8', v2: '#7cc27e', v3: '#e8434a' };
 function ledgerHead(e) {
   const r = e.ready || 0;
+  if (e.kind === 'svc') return [{ m: '대표번호: 영업팀 ☎900', t: 'service/web' }, { m: '-', t: '-' }, { m: '대표번호', t: 'ClusterIP 10.96.0.15' }];
+  if (e.kind === 'eps') {
+    const k = S.eps.length;
+    return [{ m: '└ 연결 명단', t: '└ endpointslice/web-x7k2p' }, { m: '-', t: '-' }, { m: `${k}명`, t: `${k} ready` }];
+  }
   if (e.kind === 'dep') {
     const name = e.ver ? { m: `계획서: 영업팀 (매뉴얼 ${e.ver})`, t: `deployment/web (web:${e.ver})` } : { m: '계획서: 영업팀', t: 'deployment/web' };
     const st = { m: `근무 ${r}/3`, t: `READY ${r}/3` };
@@ -571,7 +622,7 @@ function renderLedger() {
       cells = [{ m: `${ROOMS[e.n].m} 출입 기록`, t: `node/${ROOMS[e.n].t}` }, { m: '-', t: '-' },
         r.unreach ? { m: '연락 두절', t: 'Unknown' } : r.nr ? { m: '일 못 함', t: 'NotReady' }
           : r.cordon ? { m: '배치 금지', t: 'Ready,SchedulingDisabled' } : { m: '정상', t: 'Ready' }];
-    } else if (e.kind === 'dep' || e.kind === 'rs') {
+    } else if (e.kind) {
       cells = ledgerHead(e);
     } else {
       const p = S.pods.find((q) => q.id === e.id);
@@ -733,6 +784,7 @@ function drawEcho() {
     drawRing({ r: 4 + ph * 80, a: 1 - ph });
     E.listeners.forEach(([x, y]) => ctx.drawImage(SPR.bang, Math.round(x - 2), Math.round(y - 14 - (Math.floor(T / 10) % 2))));
   }
+  if (E.k === 'call') drawCall(E.pts, Math.min(1, ph * 1.25));
   if (E.k === 'fly') {
     const q = ease(Math.min(1, ph * 1.25));
     const x = E.from[0] + (E.to[0] - E.from[0]) * q;
@@ -1868,8 +1920,8 @@ function steps6() {
         url: `${URL_DEPLOY}#rolling-update-deployment`,
       },
       {
-        m: ['같은 과정을 반복함: v2 1명 준비 → v1 1명 퇴사.', 'v2가 3명, v1이 0명이 되면 끝.'],
-        t: ['롤아웃이 끝날 때까지 반복: 새 ReplicaSet +1(Ready 확인) → 이전 ReplicaSet −1.', '새 ReplicaSet 3/3, 이전 ReplicaSet 0.'],
+        m: ['같은 과정을 두 번 더 반복함(빠르게 보여 줌): v2 1명 준비 → v1 1명 퇴사.', 'v2가 3명, v1이 0명이 되면 끝.'],
+        t: ['롤아웃이 끝날 때까지 반복(빠르게 보여 줌): 새 ReplicaSet +1 → Ready 확인 → 이전 ReplicaSet −1.', '새 ReplicaSet 3/3, 이전 ReplicaSet 0.'],
         clock: '실제 수십 초 ~ 수 분 (Pod 수 · 준비 시간에 따라)',
         ref: 'Deployment 컨트롤러는 maxSurge·maxUnavailable 범위 안에서 새 ReplicaSet을 늘리고 이전 ReplicaSet을 줄이기를 반복함.',
         url: `${URL_DEPLOY}#rolling-update-deployment`,
@@ -1975,7 +2027,8 @@ function sync6() {
     r.ready = S.ledger.filter((q) => q.rs === r.id && q.st === 'run').length;
     sum += r.ready;
   });
-  entry('dep').ready = sum;
+  const d = entry('dep');
+  if (d) d.ready = sum;
 }
 function freestRoom() {   // 가장 비어 있는 층, 같으면 무작위
   const free = ROOM_X.map((_, n) => 2 - occ(n));
@@ -2090,23 +2143,30 @@ async function fire6(p, ms = 900) {  // 정원 담당이 직원 1명 퇴사 처�
   await doze();
   await leave6(p);
 }
-async function round6() {  // 빠르게 한 바퀴: v2 +1 → 출근 → 준비 확인 → v1 −1
-  await scale6('v2', entry('rsv2').want + 1, 450);
+async function round6() {  // 같은 과정을 몰아서 빠르게: v2 +1 → 출근 → 준비 확인 → v1 −1 → 퇴사
+  const r2 = entry('rsv2'), r1 = entry('rsv1');
+  bubble(S.A.dep.x + 6, 26, { m: `정원표 v2 ${r2.want + 1}명 · v1 ${r1.want - 1}명`, t: `v2 ${r2.want + 1} · v1 ${r1.want - 1}` }, 2600);
+  await hop(S.A.dep);
   const n = freestRoom();
   const f = addPod6(n, freeDesks(n)[0], 'v2');
-  await hop(S.A.rs);
-  await fly(P.rs(), P.api(), 450);
-  await receive(false);
-  await record(() => { S.ledger.push({ id: f.id, node: n, st: 'nrp', rs: f.rs }); return f.id; });
-  await doze();
+  quick(() => { r2.want += 1; S.ledger.push({ id: f.id, node: n, st: 'nrp', rs: f.rs }); return [r2.id, f.id]; });
   Object.assign(f, { x: ROOM_X[n] + 62, state: 'run' });
-  await walk(f, deskX(n, f.desk), 900);
+  await walk(f, deskX(n, f.desk), 800);
   f.dir = 'r';
-  await probe(f, ASK_READY, { m: '✓ 됐음', t: '✓ 200 OK' }, true, 600);
-  await report6(f, 'run');
-  await scale6('v1', entry('rsv1').want - 1, 450);
-  await fire6(pickVictim('v1'), 450);
+  await probe(f, ASK_READY, { m: '✓ 됐음', t: '✓ 200 OK' }, true, 500);
+  quick(() => { entry(f.id).st = 'run'; sync6(); return f.id; });
+  await wait(300);
+  const v = pickVictim('v1');
+  v.state = 'term'; v.box = true;
+  quick(() => { r1.want -= 1; entry(v.id).st = 'term'; sync6(); return [r1.id, v.id]; });
+  await walk(v, ROOM_X[v.node] + 62, 800);
+  await tween(300, (q) => { v.alpha = 1 - q; });
+  v.state = 'gone';
+  quick(() => { S.ledger = S.ledger.filter((e) => e.id !== v.id); sync6(); return null; });
+  S.pods = S.pods.filter((p) => p.state !== 'gone');
 }
+// 몰아서 보여 줄 때: 봉투·도장 없이 장부만 바로 고친다
+function quick(change) { const ids = change(); flash = ids == null ? [] : [].concat(ids); renderLedger(); }
 
 const R6 = {
   a: [
@@ -2233,6 +2293,361 @@ const SCENE6 = {
   },
   steps: steps6,
   run: [null, 1, 2, 3, 4, 5, 6, 7].map((i) => i && (() => R6[S.plan.k][i - 1]())),
+};
+
+// ===== 7-7. 장면 ⑦ 대표번호 연결 (대본) — Service · EndpointSlice · kube-proxy · CoreDNS =====
+
+const URL_SVC = 'https://kubernetes.io/docs/concepts/services-networking/service/';
+const URL_EPS = 'https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/';
+const URL_VIP = 'https://kubernetes.io/docs/reference/networking/virtual-ips/';
+const URL_DNS = 'https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/';
+const CHOICES7 = [
+  { m: '대표번호 개설', t: 'Service 생성', k: 'open' },
+  { m: '대표번호로 전화', t: 'Service 호출 (DNS → ClusterIP)', k: 'call' },
+  { m: '직원 교체', t: 'Pod 교체 → EndpointSlice 갱신', k: 'swap' },
+  { m: '바쁜 직원', t: 'readiness 실패 → 엔드포인트 제외', k: 'nr' },
+];
+
+function steps7() {
+  const k = S.plan && S.plan.k, h = S.hero, N = h ? h.mn : '', E = h ? h.ext : '';
+  const X = S.pods.filter((p) => p.ip && !p.team).slice(0, 3).map((p) => p.ext).join('·');
+  const head = {
+    m: ['영업팀 3명은 각자 내선번호(☎)가 있음. 직원이 바뀌면 번호도 바뀜.', '그래서 바뀌지 않는 대표번호 ☎900을 둠. 아래에서 고르면 시작됨.'],
+    t: ['Pod마다 IP가 있지만, Pod가 바뀌면 IP도 바뀜.', 'Service가 바뀌지 않는 이름과 가상 IP(ClusterIP)를 줌. 아래에서 고르면 시작됨.'],
+    ref: 'Service는 같은 일을 하는 Pod 묶음에 고정된 이름과 IP를 줌. 클라이언트는 Pod IP를 몰라도 됨. 층마다 벽의 교환기 = kube-proxy, 불 켜진 칸 = 규칙에 있는 연결 대상 수.',
+    url: URL_SVC,
+  };
+  if (k === 'open') {
+    return [head,
+      {
+        m: ['관리자가 대표번호 신청서(\'영업팀\' 표시가 붙은 직원 연결)를 창구에 냄.', '창구가 검사 후 대표번호 ☎900을 정해 장부에 적고 방송함.'],
+        t: ['kubectl apply로 Service(selector: app=web)를 만듦.', 'apiserver가 ClusterIP 10.96.0.15를 할당해 저장하고 watch 이벤트가 나감.'],
+        clock: C1,
+        ref: 'Service를 만들면 컨트롤 플레인이 서비스 IP 대역에서 ClusterIP를 할당함. 이 IP는 어떤 네트워크 장치에도 붙어 있지 않은 가상 IP임.',
+        url: URL_SVC,
+      },
+      {
+        m: ['명단 담당: \'영업팀\' 표시가 붙고 준비된 직원만 골라 연결 명단을 만듦.', '총무팀 직원은 표시가 달라 빠짐.'],
+        t: ['EndpointSlice 컨트롤러가 selector(app=web)에 맞는 Pod의 IP·준비 상태로 EndpointSlice를 만듦.', 'app=front Pod는 대상 아님.'],
+        clock: C1,
+        ref: 'selector가 있는 Service에는 컨트롤 플레인(EndpointSlice 컨트롤러)이 EndpointSlice를 자동으로 만듦. EndpointSlice의 ownerReference가 Service를 가리킴(장부의 └).',
+        url: URL_EPS,
+      },
+      {
+        m: [`층마다 교환기가 방송을 듣고 '☎900 → ${X} 중 하나' 규칙을 적어 둠.`, '모든 층에 같은 규칙 — 어느 층에서 걸어도 연결됨.'],
+        t: ['모든 노드의 kube-proxy가 Service·EndpointSlice를 watch해 규칙(iptables 등)을 씀.', '어느 노드에서 ClusterIP로 보내도 같은 규칙이 적용됨.'],
+        clock: C1,
+        ref: 'kube-proxy는 모든 노드에서 돌며 Service와 EndpointSlice의 추가·삭제를 watch함. 리눅스 모드는 iptables(현재 기본)·ipvs·nftables.',
+        url: `${URL_VIP}#proxy-mode-iptables`,
+      },
+      {
+        m: ['번호 안내도 \'영업팀 = ☎900\'을 번호부에 올림.', '이제 이름(영업팀)만 알면 전화할 수 있음.', AGAIN.m],
+        t: ['CoreDNS가 Service를 watch해 web.default.svc.cluster.local → 10.96.0.15 레코드를 제공함.', '클라이언트는 이름만 알면 됨.', AGAIN.t],
+        clock: C1,
+        ref: '클러스터 DNS(CoreDNS)는 Service마다 이름 → ClusterIP 레코드를 만듦. CoreDNS는 실제로는 클러스터 안의 Pod로 돎 — 그림에선 본사에 둠(단순화).',
+        url: URL_DNS,
+      },
+    ];
+  }
+  if (k === 'call') {
+    return [head,
+      {
+        m: ['총무팀 직원(3층)이 영업팀에 전화하려 함.', '먼저 번호 안내에 물어 대표번호 ☎900을 받음.'],
+        t: ['클라이언트 Pod가 http://web 을 호출 → CoreDNS에 web의 IP를 물음.', '답: ClusterIP 10.96.0.15.'],
+        clock: C1,
+        ref: 'Pod의 /etc/resolv.conf는 클러스터 DNS를 가리킴. 같은 네임스페이스면 web, 다른 네임스페이스면 web.<네임스페이스>로 찾음(search 도메인).',
+        url: URL_DNS,
+      },
+      {
+        m: ['☎900으로 걸면 자기 층 교환기의 규칙이 명단 중 1명을 골라 바로 연결함.', '창구직원·장부는 전화 연결에 끼지 않음.'],
+        t: ['패킷이 그 노드 커널의 규칙에서 Pod IP 하나로 목적지가 바뀌어(DNAT) 그 Pod로 직접 감.', 'apiserver·etcd는 데이터 경로에 없음. 다른 노드의 Pod로도 바로 감.'],
+        clock: '실제 1밀리초 미만',
+        ref: 'iptables 모드의 kube-proxy는 커널에 규칙만 심고 패킷을 직접 나르지 않음. 규칙이 엔드포인트 하나를 기본적으로 무작위로 골라 목적지를 바꿈. 노드 사이 전달은 Pod 네트워크(CNI)가 함.',
+        url: `${URL_VIP}#proxy-mode-iptables`,
+      },
+      {
+        m: ['다시 걸면 다른 직원이 받을 수 있음. 대표번호는 그대로, 받는 사람만 바뀜.', '전화가 여러 직원에게 나뉨(부하 분산).', AGAIN.m],
+        t: ['새 연결마다 엔드포인트를 다시 고름 → 요청이 Pod들에 나뉨.', '한 연결(keep-alive) 안의 요청들은 같은 Pod로 감.', AGAIN.t],
+        clock: C1,
+        ref: '선택은 연결 단위임(커널 conntrack이 연결마다 고른 목적지를 기억). 그래서 오래 유지되는 연결은 한 Pod에 몰릴 수 있음.',
+        url: URL_VIP,
+      },
+    ];
+  }
+  if (k === 'swap') {
+    return [head,
+      {
+        m: [`관리자가 2층 직원(${N} ☎${E})을 퇴사 처리함 → 장부에 '퇴사 예정'.`, '명단 담당이 그 직원을 연결 대상에서 바로 뺌.'],
+        t: ['Pod 삭제 → Terminating.', 'EndpointSlice 컨트롤러가 그 엔드포인트를 terminating으로 표시 → 새 연결 대상에서 빠짐.'],
+        clock: C1,
+        ref: '종료 중인 Pod는 EndpointSlice에 terminating으로 남고, 프록시는 보통 이런 엔드포인트를 무시함(그림에선 명단에서 뺌). 그동안 Pod는 정리(최대 30초)를 함.',
+        url: `${URL_EPS}#conditions`,
+      },
+      {
+        m: [`층마다 교환기가 규칙에서 ☎${E}를 뺌. 그사이 전화는 남은 2명에게만 감.`, '정리가 끝난 직원이 나감.'],
+        t: ['각 노드의 kube-proxy가 규칙 갱신 → 남은 2개로만 연결.', '종료가 끝난 Pod는 삭제됨.'],
+        clock: C1,
+        ref: 'kube-proxy는 EndpointSlice 변화를 watch해 규칙을 고침. 갱신은 노드마다 따로 일어나서 아주 짧은 시차가 있을 수 있음.',
+        url: URL_VIP,
+      },
+      {
+        m: ['정원 담당이 신입을 뽑아 출근시킴(장면 ①과 같음).', '내선번호는 앉은 층에서 새로 받음(이전 직원 번호와 다름). 준비되면 \'근무\'.'],
+        t: ['ReplicaSet이 새 Pod 생성 → 스케줄링 → kubelet 실행(장면 ①).', 'Pod IP는 노드에서 새로 할당됨(CNI) → 이전 IP와 다름. readiness 성공 → Ready.'],
+        clock: '실제 수 초',
+        ref: 'Pod IP는 Pod가 노드에서 만들어질 때 네트워크 플러그인(CNI)이 줌. Pod를 다시 만들면 IP가 바뀜 — 그래서 Service가 필요함.',
+        url: URL_SVC,
+      },
+      {
+        m: ['명단 담당이 신입을 명단에 넣고, 교환기들이 규칙을 고침.', '다시 3명.'],
+        t: ['EndpointSlice에 새 IP 추가 → 모든 노드의 kube-proxy가 규칙 갱신.', '엔드포인트 다시 3개.'],
+        clock: C1,
+        ref: 'Ready가 된 Pod만 새 연결 대상이 됨. 준비되기 전에는 명단에 있어도 ready=false라 연결되지 않음.',
+        url: `${URL_EPS}#conditions`,
+      },
+      {
+        m: ['대표번호 ☎900은 처음부터 그대로. 거는 쪽은 직원이 바뀐 걸 몰라도 됨.', '이번 전화는 신입에게 연결됨.', AGAIN.m],
+        t: ['ClusterIP는 그대로, 뒤의 Pod IP만 바뀜. 클라이언트는 이름·ClusterIP만 앎.', '새 연결이 새 Pod로 감.', AGAIN.t],
+        clock: C1,
+        ref: 'Service가 있으면 Pod가 바뀌어도 클라이언트 설정을 고칠 필요가 없음.',
+        url: URL_SVC,
+      },
+    ];
+  }
+  if (k === 'nr') {
+    return [head,
+      {
+        m: [`2층 직원(${N})이 바빠 "새 일 받을 수 있나?"에 ✗ → 장부 '준비 안 됨'(장면 ⑥).`, '자리에는 그대로 있음.'],
+        t: ['readiness probe 실패 → Pod Ready=False(장면 ⑥).', 'Pod는 그대로 Running.'],
+        clock: '실제 10초 간격으로 확인',
+        ref: 'readiness 실패는 재시작을 일으키지 않음. Pod의 Ready 조건만 바뀜.',
+        url: 'https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/#readiness-probe',
+      },
+      {
+        m: ['명단 담당이 그 직원을 연결 대상에서 뺌 → 교환기 규칙에서도 빠짐.', '퇴사가 아니라 연결만 잠시 끊음.'],
+        t: ['EndpointSlice의 그 엔드포인트가 ready=false → kube-proxy가 규칙에서 뺌.', 'Pod 삭제·재시작은 없음.'],
+        clock: C1,
+        ref: 'EndpointSlice의 serving/ready 조건은 Pod의 Ready를 따름. 프록시는 ready인 엔드포인트로만 새 연결을 보냄.',
+        url: `${URL_EPS}#conditions`,
+      },
+      {
+        m: ['전화를 걸면 남은 2명에게만 연결됨.', '바쁜 직원에게는 새 전화가 가지 않음.'],
+        t: ['새 연결은 ready인 엔드포인트 2개로만 감.', 'Ready가 아닌 Pod로는 새 요청이 가지 않음.'],
+        clock: C1,
+        ref: '이미 맺어진 연결이 바로 끊기지는 않음. 새 연결만 다른 Pod로 감.',
+        url: URL_VIP,
+      },
+      {
+        m: ['다시 받을 수 있게 되면 명단·규칙에 돌아옴 → 다시 3명.', '바쁨(readiness)은 연결만 잠시 빼 둠 — 직원은 그대로.', AGAIN.m],
+        t: ['readiness 다시 성공 → ready=true → kube-proxy 규칙에 복귀.', 'RESTARTS 0, Pod IP 그대로.', AGAIN.t],
+        clock: C1,
+        ref: 'readiness로 빠졌다 돌아오는 동안 Pod는 바뀌지 않으므로 IP도 그대로임.',
+        url: `${URL_EPS}#conditions`,
+      },
+    ];
+  }
+  return [head];
+}
+
+function setIp(p) {   // 내선번호 = Pod IP. 층(노드)마다 따로 매김
+  const o = S.ipNext[p.node]++;
+  Object.assign(p, { ip: `10.244.${p.node + 1}.${o}`, ext: `${p.node + 1}${String(o).padStart(2, '0')}` });
+}
+function addPod7(node, desk) { const p = addPod(node, desk); setIp(p); return p; }
+const extsOf = (ids) => ids.map((id) => S.pods.find((p) => p.id === id)).filter(Boolean).map((p) => p.ext).join('·');
+
+async function phone(pts, ms) {   // 전화 신호가 길을 따라 간다
+  S.echo = { k: 'call', pts };
+  const c = { pts, p: 0 };
+  S.calls.push(c);
+  await tween(ms, (p) => { c.p = p; });
+  S.calls.splice(S.calls.indexOf(c), 1);
+}
+async function sbUpdate() {   // 층마다 교환기가 새 명단대로 규칙을 고친다
+  for (let n = 0; n < 3; n++) {
+    S.rules[n] = S.eps.slice();
+    S.sbFlash[n] = now + 900;
+    bubble(ROOM_X[n] + 51, 76, { m: S.eps.length ? `☎900 → ${extsOf(S.eps)}` : '규칙 없음', t: `규칙 ${S.eps.length}개` }, Infinity, 'ok');
+    await wait(300);
+  }
+  await wait(400);
+}
+async function epsUpdate(change, note) {   // 명단 담당 → 창구 → 장부의 연결 명단 → 교환기들에 방송
+  await hop(S.A.ep);
+  bubble(S.A.ep.x + 6, 26, note, 1800);
+  await wait(400);
+  await fly(P.ep(), P.api(), 800);
+  await receive(false);
+  await record(() => { change(); return 'eps'; });
+  await broadcast([0, 1, 2].map((n) => P.sb(n)));
+  await doze();
+}
+async function report7(p, st) {   // 층 관리자 보고 → 명단 담당이 방송을 들음
+  await fly(P.kub(p.node), P.api(), 800);
+  await receive(false);
+  await record(() => { entry(p.id).st = st; return p.id; });
+  await broadcast([P.ep()]);
+  await doze();
+}
+async function lookup() {
+  const c = S.caller;
+  bubble(...podTop(c), { m: '영업팀 번호는?', t: 'web 의 IP?' }, Infinity, 'no');
+  await phone([podTop(c), P.dns()], 900);
+  S.dnsFlash = now + 900;
+  bubble(193, 37, { m: '영업팀 = ☎900', t: 'web → 10.96.0.15' }, Infinity, 'ok');
+  await wait(500);
+  await phone([P.dns(), podTop(c)], 700);
+}
+async function dial({ avoid, prefer } = {}) {   // ☎900 → 거는 사람 층의 교환기 → 규칙대로 1명
+  const c = S.caller, rules = S.rules[c.node];
+  let cand = prefer != null && rules.includes(prefer) ? [prefer] : rules.filter((id) => id !== avoid);
+  if (!cand.length) cand = rules;
+  const pick = cand[Math.floor(Math.random() * cand.length)];   // 먼저 뽑고 찾는다 (find 안에서 뽑으면 직원마다 다시 뽑힘)
+  const t = S.pods.find((p) => p.id === pick);
+  bubble(...podTop(c), { m: '☎900 걸기', t: '→ 10.96.0.15' }, Infinity);
+  await phone([podTop(c), P.sb(c.node)], 500);
+  bubble(ROOM_X[c.node] + 51, 76, { m: `→ ☎${t.ext}`, t: `→ ${t.ip}` }, Infinity, 'ok');
+  await wait(350);
+  await phone([P.sb(c.node), podTop(t)], 800);
+  bubble(...podTop(t), { m: '여보세요 ✓', t: '200 OK' }, Infinity, 'ok');
+  await wait(700);
+  return t;
+}
+
+const R7 = {
+  open: [
+    async () => {
+      bubble(S.A.me.x + 6, 31, { m: '대표번호 신청 (영업팀)', t: 'Service selector app=web' });
+      await hop(S.A.me);
+      await fly(P.me(), P.api(), 1000);
+      await receive(true);
+      await record(() => { S.ledger.unshift({ id: 'svc', kind: 'svc' }); return 'svc'; });
+      bubble(165, 20, { m: '☎900 배정', t: 'ClusterIP 10.96.0.15' }, Infinity, 'ok');
+      await broadcast([P.ep(), P.dns(), ...[0, 1, 2].map((n) => P.sb(n))]);
+      await doze();
+    },
+    async () => {
+      S.pods.forEach((p) => bubble(...podTop(p), p.team ? { m: '✗ 총무팀', t: '✗ app=front' } : { m: '✓ 영업팀', t: '✓ app=web' }, 2200, p.team ? 'no' : 'ok'));
+      await wait(900);
+      await epsUpdate(() => {
+        S.eps = S.pods.filter((p) => !p.team).map((p) => p.id);
+        S.ledger.splice(1, 0, { id: 'eps', kind: 'eps' });
+      }, { m: '명단 작성 (3명)', t: 'EndpointSlice 생성' });
+    },
+    sbUpdate,
+    async () => {
+      S.dnsFlash = now + 1500;
+      bubble(193, 37, { m: '번호부: 영업팀 = ☎900', t: 'web.default.svc → 10.96.0.15' }, Infinity, 'ok');
+      await wait(900);
+    },
+  ],
+  call: [
+    lookup,
+    async () => { S.lastT = await dial(); },
+    async () => {
+      for (let i = 0; i < 2; i++) { clearBubbles(); S.lastT = await dial({ avoid: S.lastT && S.lastT.id }); }
+    },
+  ],
+  swap: [
+    async () => {
+      const v = S.hero;
+      await hop(S.A.me);
+      await fly(P.me(), P.api(), 900);
+      await receive(false);
+      v.state = 'term'; v.box = true;
+      await record(() => { entry(v.id).st = 'term'; return v.id; });
+      await broadcast([P.kub(v.node), P.rs(), P.ep()]);
+      await doze();
+      await epsUpdate(() => { S.eps = S.eps.filter((id) => id !== v.id); }, { m: `☎${v.ext} 연결 대상에서 뺌`, t: `${v.ip} terminating` });
+    },
+    async () => {
+      await sbUpdate();
+      await leave6(S.hero);
+    },
+    async () => {
+      await hop(S.A.rs);
+      await fly(P.rs(), P.api(), 700);
+      await receive(false);
+      const f = addPod(null, null);
+      S.fresh = f;
+      await record(() => { S.ledger.push({ id: f.id, node: null, st: 'pend' }); return f.id; });
+      await broadcast([P.sch()]);
+      const n = freestRoom();
+      await hop(S.A.sch);
+      await fly(P.sch(), P.api(), 600);
+      await receive(false);
+      f.node = n;
+      f.desk = freeDesks(n, f)[0];
+      setIp(f);
+      await record(() => { Object.assign(entry(f.id), { node: n, st: 'crt' }); return f.id; });
+      await broadcast([P.kub(n)]);
+      await doze();
+      await hop(S.kub[n]);
+      Object.assign(f, { x: ROOM_X[n] + 62, feet: DESK_FEET, state: 'run', alpha: 1 });
+      await walk(f, deskX(n, f.desk), 1100);
+      f.dir = 'r';
+      await probe(f, ASK_READY, { m: '✓ 됐음', t: '✓ 200 OK' }, true, 700);
+      await report7(f, 'run');
+      bubble(...podTop(f), { m: `새 번호 ☎${f.ext}`, t: `새 IP ${f.ip}` }, Infinity, 'ok');
+    },
+    async () => {
+      const f = S.fresh;
+      await epsUpdate(() => { S.eps.push(f.id); }, { m: `☎${f.ext} 명단에 추가`, t: `${f.ip} 추가` });
+      await sbUpdate();
+    },
+    async () => { await dial({ prefer: S.fresh.id }); },
+  ],
+  nr: [
+    async () => {
+      await probe(S.hero, { m: '새 일 받을 수 있나?', t: 'GET /ready' }, { m: '✗ 지금은 안 됨', t: '✗ 503' }, false);
+      await hop(S.kub[S.hero.node]);
+      await report7(S.hero, 'nrp');
+      bubble(...podTop(S.hero), { m: '준비 안 됨', t: 'Ready=False' }, Infinity, 'no');
+    },
+    async () => {
+      const h = S.hero;
+      await epsUpdate(() => { S.eps = S.eps.filter((id) => id !== h.id); }, { m: `☎${h.ext} 연결 대상에서 뺌`, t: `${h.ip} ready=false` });
+      await sbUpdate();
+    },
+    async () => {
+      for (let i = 0; i < 2; i++) { clearBubbles(); S.lastT = await dial({ avoid: S.lastT && S.lastT.id }); }
+      bubble(...podTop(S.hero), { m: '전화 안 옴', t: '새 연결 없음' }, Infinity, 'no');
+    },
+    async () => {
+      const h = S.hero;
+      await probe(h, { m: '새 일 받을 수 있나?', t: 'GET /ready' }, { m: '✓ 이제 됨', t: '✓ 200 OK' }, true);
+      await hop(S.kub[h.node]);
+      await report7(h, 'run');
+      await epsUpdate(() => { S.eps.push(h.id); }, { m: `☎${h.ext} 다시 추가`, t: `${h.ip} ready=true` });
+      await sbUpdate();
+    },
+  ],
+};
+
+const SCENE7 = {
+  clickPods: false,
+  sub: { m: '장부는 창구직원만 씀 · ☎ = 내선번호', t: 'etcd는 apiserver만 씀 · 이름표 = Pod IP' },
+  choices: CHOICES7,
+  plan: (c) => {
+    if (c.k === 'open') {           // 대표번호가 없던 때부터
+      S.ledger = S.ledger.filter((e) => e.kind !== 'svc' && e.kind !== 'eps');
+      S.eps = []; S.rules = [[], [], []];
+      renderLedger();
+    }
+    return { k: c.k };
+  },
+  init() {
+    S.A.ep = { x: 86, feet: 58, dy: 0 };
+    S.dns = true; S.dnsFlash = 0; S.ipNext = [5, 5, 5]; S.sbFlash = [0, 0, 0];
+    [0, 1, 2].forEach((n) => addPod7(n, 0));
+    const c = addPod7(2, 1);
+    Object.assign(c, { team: '총무', noLedger: true, look: 5 });
+    S.caller = c; S.hero = S.pods[1];
+    S.eps = S.pods.filter((p) => !p.team).map((p) => p.id);
+    S.rules = [0, 1, 2].map(() => S.eps.slice());
+    S.ledger.push({ id: 'svc', kind: 'svc' }, { id: 'eps', kind: 'eps' });
+  },
+  steps: steps7,
+  run: [null, 1, 2, 3, 4, 5].map((i) => i && (() => R7[S.plan.k][i - 1]())),
 };
 
 let SC = SCENE1;
@@ -2380,7 +2795,7 @@ const SCENES = [
   { m: '④ 층 정전', t: '④ 노드 장애', sc: SCENE4 },
   { m: '⑤ 책상 크기 초과', t: '⑤ limits · OOMKilled', sc: SCENE5 },
   { m: '⑥ 업무 매뉴얼 개정', t: '⑥ 롤링 업데이트 · 프로브', sc: SCENE6 },
-  { m: '⑦ 대표번호 연결', t: '⑦ Service' },
+  { m: '⑦ 대표번호 연결', t: '⑦ Service · DNS', sc: SCENE7 },
 ];
 function switchScene(sc) {
   SC = sc;
