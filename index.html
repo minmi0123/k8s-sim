@@ -73,6 +73,7 @@
   <div class="ctrl">
     <button id="reset">처음부터</button>
     <button id="next" class="main">다음 ▶</button>
+    <button id="replay" title="지금 단계를 처음부터 다시 봄">↺ 다시보기</button>
     <label><input type="checkbox" id="auto"> 자동 재생</label>
     <span class="count" id="count"></span>
   </div>
@@ -241,6 +242,16 @@ const L = (o) => (o == null ? '' : typeof o === 'string' ? o : o[MODE]);
 let S;      // 장면 상태
 let gen = 0; // 처음부터를 누르면 올라감 → 진행 중이던 연출은 버려진다
 
+// 난수는 씨앗에서 뽑는다 → 다시보기 때 같은 씨앗으로 돌리면 같은 결과(같은 층·같은 이름)가 나온다
+let seed = Date.now() | 0;
+function rnd() {
+  seed = (seed + 0x6D2B79F5) | 0;
+  let t = seed;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
 function initState() {
   S = {
     A: {
@@ -271,8 +282,8 @@ function addPod(node, desk) {
   const used = new Set(S.pods.map((p) => p.mn));   // 떠난 직원 이름도 한 판에선 다시 안 씀 (다 쓰면 지금 있는 사람만 피함)
   let free = NAMES.filter((n) => !used.has(n) && !S.names.has(n));
   if (!free.length) free = NAMES.filter((n) => !used.has(n));
-  const mn = free[Math.floor(Math.random() * free.length)];
-  const sfx = Array.from({ length: 5 }, () => 'bcdfghjklmnpqrstvwxz2456789'[Math.floor(Math.random() * 27)]).join('');
+  const mn = free[Math.floor(rnd() * free.length)];
+  const sfx = Array.from({ length: 5 }, () => 'bcdfghjklmnpqrstvwxz2456789'[Math.floor(rnd() * 27)]).join('');
   S.names.add(mn);
   const p = {
     id: ++podSeq, mn, tn: `${RS_NAME}-${sfx}`, sfx, look: podSeq % LOOKS.emp.length,
@@ -563,7 +574,7 @@ function bubble(x, y, txt, ms = Infinity, cls = '', keep = false) {
   d.textContent = L(txt);
   place(d, x, y);
   stage.appendChild(d);
-  bubbles.push({ d, until: now + ms, keep });
+  bubbles.push({ d, until: now + ms, keep, args: [x, y, txt, ms, cls, keep] });
 }
 function clearBubbles(all = false) {
   bubbles = bubbles.filter((b) => { if (all || !b.keep) { b.d.remove(); return false; } return true; });
@@ -914,7 +925,7 @@ const RUN = [
     const free = ROOM_X.map((_, n) => 2 - occ(n));
     const best = Math.max(...free);
     const cand = free.map((f, n) => (f === best && f > 0 ? n : -1)).filter((n) => n >= 0);
-    const target = cand[Math.floor(Math.random() * cand.length)];
+    const target = cand[Math.floor(rnd() * cand.length)];
     for (let n = 0; n < 3; n++) {
       if (free[n] <= 0) bubble(ROOM_X[n] + 38, 94, { m: '✗ 빈자리 없음', t: '✗ 필터 탈락' }, Infinity, 'no');
       else bubble(ROOM_X[n] + 38, 94, { m: `여유 ${free[n]}`, t: `점수 ${free[n]}` });
@@ -994,7 +1005,7 @@ function plan2(req) {
   const cands = rooms.filter((r) => !r.why);
   const best = Math.max(...cands.map((r) => r.score));
   const top = cands.filter((r) => r.score === best);
-  return { req, rooms, cands, target: top.length ? top[Math.floor(Math.random() * top.length)].n : null };
+  return { req, rooms, cands, target: top.length ? top[Math.floor(rnd() * top.length)].n : null };
 }
 
 function steps2() {
@@ -1263,7 +1274,7 @@ const RUN3 = [
       const free = cnt.map((c, n) => 2 - occ(n) - c);
       const best = Math.max(...free);
       const top = free.map((v, n) => (v === best ? n : -1)).filter((n) => n >= 0);
-      const n = top[Math.floor(Math.random() * top.length)];
+      const n = top[Math.floor(rnd() * top.length)];
       f.target = n;
       f.desk = freeDesks(n, f)[cnt[n]];
       cnt[n]++;
@@ -1495,7 +1506,7 @@ async function schedule4(blocked) {
     const free = cnt.map((c, n) => (n === S.down ? -1 : 2 - occ(n) - c));
     const best = Math.max(...free);
     const top = free.map((v, n) => (v === best && v > 0 ? n : -1)).filter((n) => n >= 0);
-    const n = top[Math.floor(Math.random() * top.length)];
+    const n = top[Math.floor(rnd() * top.length)];
     f.target = n;
     f.desk = freeDesks(n, f)[cnt[n]];
     cnt[n]++;
@@ -2034,13 +2045,13 @@ function freestRoom() {   // 가장 비어 있는 층, 같으면 무작위
   const free = ROOM_X.map((_, n) => 2 - occ(n));
   const best = Math.max(...free);
   const top = free.map((v, n) => (v === best ? n : -1)).filter((n) => n >= 0);
-  return top[Math.floor(Math.random() * top.length)];
+  return top[Math.floor(rnd() * top.length)];
 }
 function pickVictim(v) {  // 같은 층에 팀원이 많은 쪽부터, 같으면 무작위
   const vs = VERS(v), cnt = (p) => S.pods.filter((q) => q.node === p.node && seated(q)).length;
   const best = Math.max(...vs.map(cnt));
   const top = vs.filter((p) => cnt(p) === best);
-  return top[Math.floor(Math.random() * top.length)];
+  return top[Math.floor(rnd() * top.length)];
 }
 const podTop = (p) => [p.x + 6, p.feet - 21];
 
@@ -2501,7 +2512,7 @@ async function dial({ avoid, prefer } = {}) {   // ☎900 → 거는 사람 층�
   const c = S.caller, rules = S.rules[c.node];
   let cand = prefer != null && rules.includes(prefer) ? [prefer] : rules.filter((id) => id !== avoid);
   if (!cand.length) cand = rules;
-  const pick = cand[Math.floor(Math.random() * cand.length)];   // 먼저 뽑고 찾는다 (find 안에서 뽑으면 직원마다 다시 뽑힘)
+  const pick = cand[Math.floor(rnd() * cand.length)];   // 먼저 뽑고 찾는다 (find 안에서 뽑으면 직원마다 다시 뽑힘)
   const t = S.pods.find((p) => p.id === pick);
   bubble(...podTop(c), { m: '☎900 걸기', t: '→ 10.96.0.15' }, Infinity);
   await phone([podTop(c), P.sb(c.node)], 500);
@@ -2672,6 +2683,7 @@ const lastStep = () => SC.steps().length - 1;
 
 function updBtns() {
   $('next').disabled = busy || cur === 0 || cur >= lastStep();
+  $('replay').disabled = cur === 0;
 }
 
 // 장면 ② 처럼 고르는 장면: 기다리는 동안 선택 칩을 보여 준다
@@ -2705,6 +2717,7 @@ async function runStep(i) {
   say(i);
   stopEcho();
   clearBubbles();
+  snap = { S: structuredClone(S), seed, podSeq, keeps: bubbles.filter((b) => b.keep).map((b) => b.args) };
   busy = true; updBtns();
   await SC.run[i]();
   if (g !== gen) return;
@@ -2720,6 +2733,23 @@ async function runStep(i) {
 
 function next() { if (!busy && cur >= 1 && cur < lastStep()) runStep(cur + 1); }
 
+// 다시보기: 단계를 시작할 때 찍어 둔 상태로 돌려 같은 단계를 다시 돈다 (진행 중이어도 됨)
+let snap = null;
+function replay() {
+  if (!snap || cur < 1) return;
+  gen++;
+  tweens.length = 0;
+  clearBubbles(true);
+  podTags.forEach((el) => el.remove()); podTags.clear();
+  loopFlash = []; flash = [];
+  S = structuredClone(snap.S); seed = snap.seed; podSeq = snap.podSeq;
+  snap.keeps.forEach((a) => bubble(...a));
+  refreshRoomTags();
+  renderLedger();
+  renderChoices();
+  runStep(cur);
+}
+
 function reset() {
   gen++;
   tweens.length = 0;
@@ -2731,7 +2761,7 @@ function reset() {
   Object.assign($('lrs').dataset, SC.sub);
   $('lrs').textContent = L(SC.sub);
   renderLedger();
-  cur = 0; busy = false;
+  cur = 0; busy = false; snap = null;
   say(0); updBtns(); renderChoices();
 }
 
@@ -2771,6 +2801,7 @@ cv.addEventListener('mousemove', (e) => {
   cv.style.cursor = S.phase === 'idle' && (podAt(x, y) || roomAt(x, y) != null) ? 'pointer' : 'default';
 });
 $('next').addEventListener('click', next);
+$('replay').addEventListener('click', replay);
 $('reset').addEventListener('click', reset);
 $('auto').addEventListener('change', () => {
   if ($('auto').checked) { if (loopFlash.length) { loopFlash = []; renderLedger(); } next(); } else if (!busy) startEcho();
@@ -2836,7 +2867,7 @@ setMode('m');
 requestAnimationFrame(frame);
 
 window.sim = {
-  get S() { return S; }, setMode, next, reset, clickPod, choose, CHOICES2,
+  get S() { return S; }, setMode, next, replay, reset, clickPod, choose, CHOICES2,
   scene: (i) => switchScene(SCENES[i - 1].sc), get cur() { return cur; }, get busy() { return busy; },
 };
 </script>
