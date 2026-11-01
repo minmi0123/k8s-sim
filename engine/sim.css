@@ -1,0 +1,105 @@
+/* 엔진 화면 모양: 장면 화면 · 처음 화면 · 도감 · 폰 */
+:root { --ink: #3d2c3a; --paper: #fbf6ea; --accent: #e8734a; --ok: #4f9a7a; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #efe6d2; color: var(--ink); font-family: "Pretendard", "Malgun Gothic", sans-serif; }
+.wrap { max-width: 1030px; margin: 0 auto; padding: 12px; }
+header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+h1 { font-size: 17px; margin: 0 6px 0 0; }
+/* 장면 탭은 늘 둘째 줄 한 줄 — 비유/용어로 글 길이가 바뀌어도 머리 틀은 그대로. 넘치면 옆으로 넘김 */
+.scenes { order: 3; width: 100%; display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.scenes::-webkit-scrollbar { display: none; }
+.scenes button { flex: none; font: inherit; font-size: 12px; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); }
+.scenes button.on { background: var(--ink); color: #fff; }
+.scenes button:disabled { opacity: .35; }
+.mode { display: flex; border: 2px solid var(--ink); border-radius: 6px; overflow: hidden; }
+.mode button { border: 0; background: #fff; color: var(--ink); padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.mode button.on { background: var(--ink); color: #fff; }
+.stage { position: relative; width: 100%; border: 3px solid var(--ink); border-radius: 4px; line-height: 0; }
+canvas { display: block; width: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+.tag, .bub { position: absolute; transform: translate(-50%, -100%); line-height: 1.25; white-space: nowrap; pointer-events: none; }
+.tag { font-size: 11px; padding: 1px 4px; background: rgba(255, 255, 255, .88); border: 1px solid var(--ink); border-radius: 3px; }
+.tag.room { font-weight: bold; background: rgba(255, 248, 230, .9); transform: translate(0, -100%); }
+.tag.pod { font-size: 10px; padding: 0 3px; border-color: #8a7a6a; }
+.bub { font-size: 12px; padding: 2px 6px; background: #fff3d6; border: 2px solid var(--accent); border-radius: 6px; font-weight: bold; animation: pop .25s ease-out; }
+.bub.ok { border-color: var(--ok); background: #e9f6ee; }
+.bub.no { border-color: #b8b0a8; background: #f2eeea; color: #8a7f78; }
+@keyframes pop { from { transform: translate(-50%, -80%) scale(.6); opacity: 0; } }
+.panel { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.say { flex: 1 1 440px; background: var(--paper); border: 2px solid var(--ink); border-radius: 6px; padding: 8px 12px; min-height: 92px; }
+.say p { margin: 3px 0; font-size: 15px; }
+.meta { display: flex; gap: 10px; align-items: center; margin-top: 6px; font-size: 12px; color: #7a6a6a; flex-wrap: wrap; }
+.meta details { font-size: 12px; }
+.meta summary { cursor: pointer; }
+.meta details p { margin: 4px 0; max-width: 560px; color: var(--ink); }
+.choices { display: flex; gap: 6px; flex-wrap: wrap; }
+.choices:not(:empty) { margin: 8px 0 2px; }
+.choices button { font: inherit; font-size: 13px; padding: 4px 10px; border: 2px solid var(--accent); border-radius: 14px; background: #fff; color: var(--ink); cursor: pointer; }
+.choices button:hover { background: #fff3d6; }
+.ledger { flex: 0 1 330px; background: #fffdf5; border: 2px solid var(--ink); border-radius: 6px; padding: 8px 10px; font-size: 13px; }
+.ledger .lh { font-weight: bold; margin-bottom: 2px; }
+.ledger .lrs { font-size: 12px; color: #7a6a6a; margin-bottom: 4px; }
+.ledger { overflow-x: auto; }
+.ledger table { width: 100%; border-collapse: collapse; }
+.ledger td { white-space: nowrap; }
+.ledger th, .ledger td { text-align: left; padding: 2px 4px; border-bottom: 1px dashed #d9cdb4; font-size: 12px; }
+.ledger tr.flash td { animation: flash 1.4s ease-out; }
+@keyframes flash { from { background: #ffe27a; } }
+.ledger tr.flash-loop td { animation: flash 1.4s ease-out infinite; }
+.ctrl { display: flex; gap: 6px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.ctrl button { font: inherit; font-size: 14px; padding: 6px 14px; border: 2px solid var(--ink); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
+.ctrl button.main { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: bold; }
+.ctrl button:disabled { opacity: .35; cursor: default; }
+.ctrl label { font-size: 13px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.ctrl .count { margin-left: auto; font-size: 12px; color: #7a6a6a; }
+[hidden] { display: none !important; }
+.nav { margin-left: auto; display: flex; gap: 4px; }
+.nav button { font: inherit; font-size: 12px; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; }
+.tag .short { display: none; }
+
+/* 처음 화면 · 도감 — 장면 화면과 같은 색 */
+.screen { max-width: 520px; margin: 0 auto; min-height: 100vh; }
+#home { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 18px; text-align: center; }
+#home .ttl { font-size: 27px; letter-spacing: -1px; margin: 0 0 6px; color: var(--ink); text-shadow: 3px 3px 0 #e2cfa6; }
+#home .tagline { font-size: 12.5px; color: #7a6a6a; margin-bottom: 20px; }
+#titleCv { width: 100%; max-width: 360px; border: 3px solid var(--ink); border-radius: 4px; margin-bottom: 22px; image-rendering: pixelated; image-rendering: crisp-edges; }
+#home .menu { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 280px; }
+#home .menu button { border: 2px solid var(--ink); border-radius: 6px; background: #fff; color: var(--ink); padding: 13px; font: inherit; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 var(--ink); }
+#home .menu button.main { background: var(--accent); color: #fff; }
+#home .menu button .s { display: block; font-size: 11px; font-weight: normal; color: #7a6a6a; margin-top: 3px; }
+#home .menu button.main .s { color: #fff3d6; }
+@media (hover: hover) { #home .menu button:hover { background: #fff3d6; } #home .menu button.main:hover { background: #ef8a62; } }
+#home .menu button:active { transform: translateY(4px); box-shadow: none; }
+#dex { max-width: 760px; padding: 0 14px 30px; }
+.dexhead { position: sticky; top: 0; background: #efe6d2; padding: 10px 0 8px; border-bottom: 2px solid var(--ink); z-index: 2; }
+.dexhead .row { display: flex; align-items: center; gap: 10px; }
+.dexhead h2 { font-size: 18px; margin: 0; color: var(--ink); }
+.dexhead .cnt { margin-left: auto; font-size: 12px; color: #7a6a6a; }
+.dexhead button, .dexit .scs button { font: inherit; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; }
+.dexhead .row button { font-size: 13px; padding: 4px 10px; }
+.dexnav { display: flex; gap: 4px; margin-top: 8px; }
+.dexnav button { font-size: 13px; padding: 3px 12px; }
+.dexnav button.on { background: var(--ink); color: #fff; }
+#dex h3 { font-size: 14px; color: #7a6a6a; margin: 18px 0 8px; }
+.dexlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 6px; }
+.dexit { display: flex; gap: 10px; align-items: flex-start; border: 2px solid var(--ink); border-radius: 6px; background: var(--paper); padding: 7px 8px; }
+.dexit .art { flex: none; width: 72px; height: 60px; background: #f3e6c8; border: 2px solid var(--ink); border-radius: 3px; image-rendering: pixelated; image-rendering: crisp-edges; }
+.dexit .nm { font-weight: bold; font-size: 15px; color: var(--ink); }
+.dexit .tm { font-size: 12px; color: var(--accent); font-weight: bold; }
+.dexit .ds { font-size: 13px; line-height: 1.45; margin-top: 3px; }
+.dexit .scs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; font-size: 11px; color: #7a6a6a; align-items: center; }
+.dexit .scs button { font-size: 12px; padding: 0 5px; }
+@media (hover: hover) { .dexhead button:not(.on):hover, .dexit .scs button:hover { background: #fff3d6; } }
+
+/* 폰: 장면 탭은 옆으로 넘기는 한 줄, 이름표는 작고 짧게 */
+@media (max-width: 700px) {
+  .wrap { padding: 8px; }
+  h1 { font-size: 15px; }
+  .tag { font-size: 8px; padding: 0 2px; }
+  .tag.pod { font-size: 7px; padding: 0 2px; }
+  .tag .full { display: none; }
+  .tag .short { display: inline; }
+  .bub { font-size: 10px; padding: 1px 4px; border-width: 1.5px; }
+  .say p { font-size: 14px; }
+  .ctrl button { padding: 6px 10px; }
+  .dexlist { grid-template-columns: 1fr; }
+}
