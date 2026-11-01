@@ -66,45 +66,7 @@ async function broadcast(listeners) {
   await wait(500);
 }
 
-// 장면 ⑤ 막대: 2층 주인공의 서류(메모리) · 손(CPU) 사용량
-const GAUGE = { top: 80, h: 32, xs: { mem: ROOM_X[1] + 44, cpu: ROOM_X[1] + 54 } };
-const gaugeY = (v) => GAUGE.top + GAUGE.h - Math.round(v * GAUGE.h);
-function drawGauges() {
-  const g = S.gauge;
-  if (!g) return;
-  const { top, h } = GAUGE;
-  [['mem', '#8fb8e8'], ['cpu', '#7cc27e']].forEach(([k, col]) => {
-    const x = GAUGE.xs[k], v = g[k], fh = Math.round(Math.min(v, 1) * h);
-    rect(x - 1, top - 1, 7, h + 2, PALETTE.o); rect(x, top, 5, h, '#f3ecdc');
-    let fill = col;
-    if (k === 'mem' && v > g.lim + 0.001) fill = T % 20 < 10 ? '#e8434a' : '#ff9a9a';
-    if (k === 'cpu' && g.thr) fill = '#f5b93a';
-    rect(x, top + h - fh, 5, fh, fill);
-    if (k === 'cpu' && g.thr) {               // 쓰로틀링: 칸막이에 막혀 줄무늬
-      for (let y = top + h - fh; y < top + h; y++) if ((y + Math.floor(T / 6)) % 4 === 0) rect(x, y, 5, 1, '#c4905a');
-    }
-    rect(x - 2, gaugeY(g.req), 9, 1, '#4f9a7a');
-    rect(x - 2, gaugeY(g.lim), 9, 1, '#e8434a');
-  });
-}
 
-// 하트비트: 살아 있는 층의 관리자가 주기적으로 ♥ 를 창구로 보낸다
-function spawnHearts() {
-  ROOM_X.forEach((_, n) => {
-    if (S.rooms[n].down || (T + n * 50) % 150) return;
-    S.hearts.push({ from: P.kub(n), t0: now });
-  });
-}
-function drawHearts() {
-  S.hearts = S.hearts.filter((h) => now - h.t0 < 800);
-  S.hearts.forEach((h) => {
-    const p = (now - h.t0) / 800, q = ease(p);
-    const x = h.from[0] + (126 - h.from[0]) * q, y = h.from[1] + (46 - h.from[1]) * q;
-    ctx.globalAlpha = p > 0.8 ? (1 - p) * 5 : 1;
-    ctx.drawImage(SPR.heart, Math.round(x - 2), Math.round(y - 2));
-    ctx.globalAlpha = 1;
-  });
-}
 
 // 단계가 끝나고 「다음」을 기다리는 동안 마지막 동작을 반복한다 (자동 재생 중에는 안 함)
 let loopFlash = [];

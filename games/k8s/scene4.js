@@ -330,9 +330,37 @@ const R4 = {
   ],
 };
 
+// 하트비트: 살아 있는 층의 관리자가 주기적으로 ♥ 를 창구로 보낸다
+function spawnHearts() {
+  ROOM_X.forEach((_, n) => {
+    if (S.rooms[n].down || (T + n * 50) % 150) return;
+    S.hearts.push({ from: P.kub(n), t0: now });
+  });
+}
+function drawHearts() {
+  S.hearts = S.hearts.filter((h) => now - h.t0 < 800);
+  S.hearts.forEach((h) => {
+    const p = (now - h.t0) / 800, q = ease(p);
+    const x = h.from[0] + (126 - h.from[0]) * q, y = h.from[1] + (46 - h.from[1]) * q;
+    ctx.globalAlpha = p > 0.8 ? (1 - p) * 5 : 1;
+    ctx.drawImage(SPR.heart, Math.round(x - 2), Math.round(y - 2));
+    ctx.globalAlpha = 1;
+  });
+}
+
+function drawHQ4() {               // 층 점검 담당
+  drawPerson(SPR.nc, S.A.nc.x, S.A.nc.feet + S.A.nc.dy);
+  ctx.drawImage(SPR.desk, S.A.nc.x - 2, 51);
+}
+
 const SCENE4 = {
   clickPods: false,
-  heartbeat: true,
+  tick: spawnHearts,
+  drawHQ: drawHQ4,
+  drawMid: drawHearts,
+  tags: [
+    { txt: { m: '층 점검 담당', t: 'Node 컨트롤러' }, s: { m: '점검', t: 'Node' }, at: () => S.A.nc && [S.A.nc.x + 6, S.A.nc.feet - 18] },
+  ],
   sub: { m: '장부는 창구직원만 씀 · 층 출입 기록 = 층 상태', t: 'etcd는 apiserver만 씀 · node = Node 오브젝트' },
   choices: CHOICES4,
   plan: (c) => { S.down = 0; return { k: c.k }; },

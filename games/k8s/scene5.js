@@ -186,10 +186,39 @@ const R5 = {
   ],
 };
 
+// 장면 ⑤ 막대: 2층 주인공의 서류(메모리) · 손(CPU) 사용량
+const GAUGE = { top: 80, h: 32, xs: { mem: ROOM_X[1] + 44, cpu: ROOM_X[1] + 54 } };
+const gaugeY = (v) => GAUGE.top + GAUGE.h - Math.round(v * GAUGE.h);
+function drawGauges() {
+  const g = S.gauge;
+  if (!g) return;
+  const { top, h } = GAUGE;
+  [['mem', '#8fb8e8'], ['cpu', '#7cc27e']].forEach(([k, col]) => {
+    const x = GAUGE.xs[k], v = g[k], fh = Math.round(Math.min(v, 1) * h);
+    rect(x - 1, top - 1, 7, h + 2, PALETTE.o); rect(x, top, 5, h, '#f3ecdc');
+    let fill = col;
+    if (k === 'mem' && v > g.lim + 0.001) fill = T % 20 < 10 ? '#e8434a' : '#ff9a9a';
+    if (k === 'cpu' && g.thr) fill = '#f5b93a';
+    rect(x, top + h - fh, 5, fh, fill);
+    if (k === 'cpu' && g.thr) {               // 쓰로틀링: 칸막이에 막혀 줄무늬
+      for (let y = top + h - fh; y < top + h; y++) if ((y + Math.floor(T / 6)) % 4 === 0) rect(x, y, 5, 1, '#c4905a');
+    }
+    rect(x - 2, gaugeY(g.req), 9, 1, '#4f9a7a');
+    rect(x - 2, gaugeY(g.lim), 9, 1, '#e8434a');
+  });
+}
+
 const SCENE5 = {
   clickPods: false,
   sub: { m: '장부는 창구직원만 씀 · 괄호 = 재시작 횟수', t: 'etcd는 apiserver만 씀 · RESTARTS = 재시작 횟수' },
   choices: CHOICES5,
+  drawMid: drawGauges,
+  tags: [
+    { txt: { m: '예약', t: 'requests' }, at: () => S.gauge && [ROOM_X[1] + 36, gaugeY(S.gauge.req) + 3], cls: 'pod' },
+    { txt: { m: '칸막이', t: 'limits' }, at: () => S.gauge && [ROOM_X[1] + 36, gaugeY(S.gauge.lim) + 3], cls: 'pod' },
+    { txt: { m: '서류', t: 'mem' }, at: () => S.gauge && [GAUGE.xs.mem + 2.5, 117], cls: 'pod' },
+    { txt: { m: '손', t: 'cpu' }, at: () => S.gauge && [GAUGE.xs.cpu + 2.5, 117], cls: 'pod' },
+  ],
   plan: (c) => ({ k: c.k }),
   init() {
     addPod(0, 0);

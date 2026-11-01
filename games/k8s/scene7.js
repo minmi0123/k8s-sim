@@ -329,10 +329,40 @@ const R7 = {
   ],
 };
 
+// 장면 ⑦: 번호 안내(CoreDNS) — 번호부와 전화기
+function drawDns() {
+  const on = S.dnsFlash > now && T % 12 < 6;
+  ctx.drawImage(SPR.desk, 185, 51);
+  rect(187, 46, 7, 5, PALETTE.o); rect(188, 47, 5, 3, on ? '#ffe27a' : '#f5b93a');
+  rect(196, 47, 6, 4, PALETTE.o); rect(197, 48, 4, 2, '#e8434a');
+}
+// 층마다 교환기(kube-proxy) — 불 켜진 칸 = 규칙에 있는 연결 대상 수
+function drawSwitchboards() {
+  ROOM_X.forEach((x0, n) => {
+    const x = x0 + 44, y = 83, on = S.sbFlash[n] > now && T % 12 < 6;
+    rect(x - 1, y - 1, 16, 10, PALETTE.o); rect(x, y, 14, 8, on ? '#ffe27a' : '#c9c6d6');
+    for (let i = 0; i < 4; i++) rect(x + 2 + i * 3, y + 3, 2, 2, i < S.rules[n].length ? '#4f9a7a' : '#8a7a6a');
+  });
+}
+
+function drawHQ7() {               // 명단 담당 · 번호 안내 · 교환기
+  drawPerson(SPR.ep, S.A.ep.x, S.A.ep.feet + S.A.ep.dy);
+  ctx.drawImage(SPR.desk, S.A.ep.x - 2, 51);
+  drawDns();
+  if (S.rules) drawSwitchboards();
+}
+
 const SCENE7 = {
   clickPods: false,
   sub: { m: '장부는 창구직원만 씀 · ☎ = 내선번호', t: 'etcd는 apiserver만 씀 · 이름표 = Pod IP' },
   choices: CHOICES7,
+  drawHQ: drawHQ7,
+  drawFx: () => S.calls.forEach((c) => drawCall(c.pts, c.p)),
+  tags: [
+    { txt: { m: '명단 담당', t: 'EndpointSlice 컨트롤러' }, s: { m: '명단', t: 'EPS' }, at: () => S.A.ep && [S.A.ep.x + 6, S.A.ep.feet - 18] },
+    { txt: { m: '번호 안내', t: 'CoreDNS' }, s: { m: '안내', t: 'DNS' }, at: () => S.dns && [193, 44] },
+    ...ROOM_X.map((x0, n) => ({ txt: { m: '교환기', t: 'kube-proxy' }, at: () => S.rules && [x0 + 51, 81], cls: 'pod' })),
+  ],
   plan: (c) => {
     if (c.k === 'open') {           // 대표번호가 없던 때부터
       S.ledger = S.ledger.filter((e) => e.kind !== 'svc' && e.kind !== 'eps');

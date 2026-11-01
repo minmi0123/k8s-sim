@@ -167,21 +167,6 @@ function drawCabinet() {
   }
 }
 
-// 장면 ⑦: 번호 안내(CoreDNS) — 번호부와 전화기
-function drawDns() {
-  const on = S.dnsFlash > now && T % 12 < 6;
-  ctx.drawImage(SPR.desk, 185, 51);
-  rect(187, 46, 7, 5, PALETTE.o); rect(188, 47, 5, 3, on ? '#ffe27a' : '#f5b93a');
-  rect(196, 47, 6, 4, PALETTE.o); rect(197, 48, 4, 2, '#e8434a');
-}
-// 층마다 교환기(kube-proxy) — 불 켜진 칸 = 규칙에 있는 연결 대상 수
-function drawSwitchboards() {
-  ROOM_X.forEach((x0, n) => {
-    const x = x0 + 44, y = 83, on = S.sbFlash[n] > now && T % 12 < 6;
-    rect(x - 1, y - 1, 16, 10, PALETTE.o); rect(x, y, 14, 8, on ? '#ffe27a' : '#c9c6d6');
-    for (let i = 0; i < 4; i++) rect(x + 2 + i * 3, y + 3, 2, 2, i < S.rules[n].length ? '#4f9a7a' : '#8a7a6a');
-  });
-}
 // 전화 신호: 지나간 길은 점선, 머리는 수화기
 function pathAt(pts, p) {
   const seg = pts.length - 1, t = Math.min(seg - 1e-6, p * seg), i = Math.floor(t), q = t - i;
@@ -215,16 +200,7 @@ function draw() {
     drawPerson(SPR.dep, S.A.dep.x, S.A.dep.feet + S.A.dep.dy);
     ctx.drawImage(SPR.desk, S.A.dep.x - 2, 51);
   }
-  if (S.A.ep) {                     // 명단 담당은 장면 ⑦
-    drawPerson(SPR.ep, S.A.ep.x, S.A.ep.feet + S.A.ep.dy);
-    ctx.drawImage(SPR.desk, S.A.ep.x - 2, 51);
-  }
-  if (S.dns) drawDns();
-  if (S.rules) drawSwitchboards();
-  if (S.A.nc) {                     // 층 점검 담당은 장면 ④
-    drawPerson(SPR.nc, S.A.nc.x, S.A.nc.feet + S.A.nc.dy);
-    ctx.drawImage(SPR.desk, S.A.nc.x - 2, 51);
-  }
+  if (SC.drawHQ) SC.drawHQ();       // 장면 전용 본사 그림 (④ 층 점검 담당, ⑦ 명단 담당 · 번호 안내 · 교환기)
   drawPerson(S.apiAwake ? SPR.api : SPR.apiSleep, 120, S.apiAwake ? 53 : 58);
   drawCounter();
   drawCabinet();
@@ -275,8 +251,7 @@ function draw() {
     const bob = Math.floor(T / 15) % 2;
     ROOM_X.forEach((x0, n) => { if (S.pods.some((p) => p.node === n && p.state === 'run')) ctx.drawImage(SPR.arrow, x0 + 36, 76 + bob); });
   }
-  drawGauges();
-  drawHearts();
+  if (SC.drawMid) SC.drawMid();     // 장면 전용 (④ 하트비트, ⑤ 막대)
 
   // 클릭할 수 있는 직원 표시
   if (SC.clickPods && S.phase === 'idle') {
@@ -294,7 +269,7 @@ function draw() {
 
   S.rings.forEach(drawRing);
   S.envs.forEach((e) => ctx.drawImage(SPR.env, Math.round(e.x - 3), Math.round(e.y - 2)));
-  S.calls.forEach((c) => drawCall(c.pts, c.p));
+  if (SC.drawFx) SC.drawFx();       // 장면 전용 (⑦ 전화 신호)
   S.bangs.forEach((b) => ctx.drawImage(SPR.bang, Math.round(b.x - 2), Math.round(b.y - 14 - (Math.floor(T / 10) % 2))));
   drawEcho();
 }
@@ -305,19 +280,20 @@ const STATIC_TAGS = [
   { txt: { m: '장부', t: 'etcd' }, at: () => [165, 28] },
   { txt: { m: '정원 담당', t: 'ReplicaSet 컨트롤러' }, s: { m: '정원', t: 'RS' }, at: () => [S.A.rs.x + 6, S.A.rs.feet - 18] },
   { txt: { m: '기획 담당', t: 'Deployment 컨트롤러' }, s: { m: '기획', t: 'Deploy' }, at: () => S.A.dep && [S.A.dep.x + 6, S.A.dep.feet - 18] },
-  { txt: { m: '층 점검 담당', t: 'Node 컨트롤러' }, s: { m: '점검', t: 'Node' }, at: () => S.A.nc && [S.A.nc.x + 6, S.A.nc.feet - 18] },
-  { txt: { m: '명단 담당', t: 'EndpointSlice 컨트롤러' }, s: { m: '명단', t: 'EPS' }, at: () => S.A.ep && [S.A.ep.x + 6, S.A.ep.feet - 18] },
-  { txt: { m: '번호 안내', t: 'CoreDNS' }, s: { m: '안내', t: 'DNS' }, at: () => S.dns && [193, 44] },
-  ...ROOM_X.map((x0, n) => ({ txt: { m: '교환기', t: 'kube-proxy' }, at: () => S.rules && [x0 + 51, 81], cls: 'pod' })),
   { txt: { m: '자리배치 담당', t: 'kube-scheduler' }, s: { m: '배치', t: 'sched' }, at: () => [S.A.sch.x + 10, S.A.sch.feet - 18] },
   ...ROOM_X.map((x0, n) => ({ room: n, txt: ROOMS[n], at: () => [x0 + 2, 79], cls: 'room' })),
   ...ROOM_X.map((x0, n) => ({ txt: { m: '층 관리자', t: 'kubelet' }, s: { m: '관리자', t: 'kubelet' }, at: () => [S.kub[n].x + 7, S.kub[n].feet - 18] })),
-  { txt: { m: '예약', t: 'requests' }, at: () => S.gauge && [ROOM_X[1] + 36, gaugeY(S.gauge.req) + 3], cls: 'pod' },
-  { txt: { m: '칸막이', t: 'limits' }, at: () => S.gauge && [ROOM_X[1] + 36, gaugeY(S.gauge.lim) + 3], cls: 'pod' },
-  { txt: { m: '서류', t: 'mem' }, at: () => S.gauge && [GAUGE.xs.mem + 2.5, 117], cls: 'pod' },
-  { txt: { m: '손', t: 'cpu' }, at: () => S.gauge && [GAUGE.xs.cpu + 2.5, 117], cls: 'pod' },
 ];
 STATIC_TAGS.forEach((s) => { s.el = makeTag(s.txt, s.cls, s.s); });
+
+// 장면 전용 이름표 (장면 객체의 tags — 모양은 STATIC_TAGS 와 같음): 장면이 바뀔 때만 다시 만든다
+let tagScene = null;
+function mountSceneTags() {
+  if (tagScene === SC) return;
+  if (tagScene && tagScene.tags) tagScene.tags.forEach((s) => { s.el.remove(); s.el = null; });
+  if (SC.tags) SC.tags.forEach((s) => { s.el = makeTag(s.txt, s.cls, s.s); });
+  tagScene = SC;
+}
 
 // 층 이름표: 창가 · 공사 중 표시가 장면마다 달라진다
 function refreshRoomTags() {
@@ -338,7 +314,7 @@ const podLabel = (p) => {
   return { m: p.mn + v, t: `…${p.sfx}${v}` };
 };
 function updateTags() {
-  STATIC_TAGS.forEach((s) => {
+  STATIC_TAGS.concat(SC.tags || []).forEach((s) => {
     const pos = s.at();
     s.el.style.display = pos ? '' : 'none';
     if (pos) place(s.el, pos[0], pos[1]);
@@ -467,7 +443,7 @@ cv.addEventListener('mousemove', (e) => {
 
 // ===== 엔진이 부르는 곳 (engine/runner.js) =====
 const WORLD = {
-  init: () => initState(),                       // S 를 새로 만듦 (장면 init 포함)
+  init() { mountSceneTags(); initState(); },     // S 를 새로 만듦 (장면 init 포함)
   clear() {                                      // 화면 밖 HTML · 반짝임 정리
     podTags.forEach((el) => el.remove()); podTags.clear();
     loopFlash = []; flash = [];
@@ -487,7 +463,7 @@ const WORLD = {
     podTags.forEach((el, id) => { const p = S.pods.find((q) => q.id === id); if (p) el.textContent = L(podLabel(p)); });
     renderLedger();
   },
-  tick() { if (SC.heartbeat) spawnHearts(); tickEcho(); },   // 매 프레임, 그리기 전
+  tick() { if (SC.tick) SC.tick(); tickEcho(); },   // 매 프레임, 그리기 전
   draw: () => draw(),
   tags: () => updateTags(),
 };
