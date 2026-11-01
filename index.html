@@ -736,7 +736,9 @@ function renderLedger() {
 
 // ===== 6. 연출 도구 =====
 
-let now = performance.now(), T = 0;
+// 연출 시계. 점검(tests/smoke.cjs)은 ?speed=30 으로 빨리 돌린다 — 평소엔 1
+const SPEED = Number(new URLSearchParams(location.search).get('speed')) || 1;
+let now = 0, lastTs = null, T = 0;
 const tweens = [];
 function tween(ms, fn) { return new Promise((res) => tweens.push({ t0: now, ms, fn, res })); }
 const wait = (ms) => tween(ms, () => {});
@@ -2931,7 +2933,7 @@ SCENES[0].btn.classList.add('on');
 // ===== 10. 루프 =====
 
 function frame(ts) {
-  now = ts; T++;
+  now += lastTs == null ? 0 : (ts - lastTs) * SPEED; lastTs = ts; T++;
   for (let i = tweens.length - 1; i >= 0; i--) {
     const w = tweens[i];
     const p = Math.min(1, (now - w.t0) / w.ms);
@@ -3232,6 +3234,7 @@ window.sim = {
   get S() { return S; }, setMode, next, replay, reset, clickPod, choose, CHOICES2,
   scene: (i) => { show('sim'); switchScene(SCENES[i - 1].sc); }, show, get screen() { return screen; }, DEX,
   get cur() { return cur; }, get busy() { return busy; },
+  get last() { return lastStep(); }, set seed(v) { seed = v | 0; },   // 점검용
 };
 </script>
 </body>

@@ -1,0 +1,655 @@
+{
+ "1-0": {
+  "steps": 8,
+  "replayed": false,
+  "pods": [
+   "시우/web-6d4f9c7b8-9nw76/0/run///",
+   "수아/web-6d4f9c7b8-bqr4t/1/run///",
+   "민지/web-6d4f9c7b8-57f6b/2/run///"
+  ],
+  "m": {
+   "lines": "정리가 끝난 직원이 나가고, 장부에서 지워짐.정원 3명 회복. 신입은 이름이 다른 새 직원임.다른 직원을 클릭하면 다시 해 볼 수 있음.",
+   "ledger": [
+    "시우 | 1층 | 근무",
+    "수아 | 2층 | 근무",
+    "민지 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "종료가 끝난 Pod는 etcd에서 삭제됨.replicas 3 회복. 새 Pod는 이름·IP가 다름.다른 Pod를 클릭하면 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-9nw76 | node-1 | Running",
+    "web-6d4f9c7b8-bqr4t | node-2 | Running",
+    "web-6d4f9c7b8-57f6b | node-3 | Running"
+   ]
+  }
+ },
+ "1-1": {
+  "steps": 8,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "수아/web-6d4f9c7b8-bqr4t/1/run///",
+   "민지/web-6d4f9c7b8-57f6b/2/run///"
+  ],
+  "m": {
+   "lines": "정리가 끝난 직원이 나가고, 장부에서 지워짐.정원 3명 회복. 신입은 이름이 다른 새 직원임.다른 직원을 클릭하면 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "수아 | 2층 | 근무",
+    "민지 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "종료가 끝난 Pod는 etcd에서 삭제됨.replicas 3 회복. 새 Pod는 이름·IP가 다름.다른 Pod를 클릭하면 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-bqr4t | node-2 | Running",
+    "web-6d4f9c7b8-57f6b | node-3 | Running"
+   ]
+  }
+ },
+ "1-2": {
+  "steps": 8,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "시우/web-6d4f9c7b8-9nw76/0/run///",
+   "민지/web-6d4f9c7b8-57f6b/2/run///"
+  ],
+  "m": {
+   "lines": "정리가 끝난 직원이 나가고, 장부에서 지워짐.정원 3명 회복. 신입은 이름이 다른 새 직원임.다른 직원을 클릭하면 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "시우 | 1층 | 근무",
+    "민지 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "종료가 끝난 Pod는 etcd에서 삭제됨.replicas 3 회복. 새 Pod는 이름·IP가 다름.다른 Pod를 클릭하면 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-9nw76 | node-1 | Running",
+    "web-6d4f9c7b8-57f6b | node-3 | Running"
+   ]
+  }
+ },
+ "2-0": {
+  "steps": 5,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "건우/web-6d4f9c7b8-nw76v/1/run///"
+  ],
+  "m": {
+   "lines": "층 관리자가 방송을 듣고 신입을 자리에 앉힘. 장부에 '근무'로 적힘.배정(자리배치 담당)과 앉히기(층 관리자)는 다른 사람이 함.다른 신입을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "건우 | 2층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "해당 노드의 kubelet이 컨테이너를 띄우고 Running을 보고함.배정(scheduler)과 실행(kubelet)은 다른 구성요소가 함.다른 조건을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-nw76v | node-2 | Running"
+   ]
+  }
+ },
+ "2-1": {
+  "steps": 5,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "건우/web-6d4f9c7b8-nw76v/1/run///"
+  ],
+  "m": {
+   "lines": "층 관리자가 방송을 듣고 신입을 자리에 앉힘. 장부에 '근무'로 적힘.배정(자리배치 담당)과 앉히기(층 관리자)는 다른 사람이 함.다른 신입을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "건우 | 2층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "해당 노드의 kubelet이 컨테이너를 띄우고 Running을 보고함.배정(scheduler)과 실행(kubelet)은 다른 구성요소가 함.다른 조건을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-nw76v | node-2 | Running"
+   ]
+  }
+ },
+ "2-2": {
+  "steps": 5,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "건우/web-6d4f9c7b8-nw76v/0/run///"
+  ],
+  "m": {
+   "lines": "층 관리자가 방송을 듣고 신입을 자리에 앉힘. 장부에 '근무'로 적힘.배정(자리배치 담당)과 앉히기(층 관리자)는 다른 사람이 함.다른 신입을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "건우 | 1층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "해당 노드의 kubelet이 컨테이너를 띄우고 Running을 보고함.배정(scheduler)과 실행(kubelet)은 다른 구성요소가 함.다른 조건을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-nw76v | node-1 | Running"
+   ]
+  }
+ },
+ "2-3": {
+  "steps": 5,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "건우/web-6d4f9c7b8-nw76v/2/run///"
+  ],
+  "m": {
+   "lines": "층 관리자가 방송을 듣고 신입을 자리에 앉힘. 장부에 '근무'로 적힘.배정(자리배치 담당)과 앉히기(층 관리자)는 다른 사람이 함.다른 신입을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "건우 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "해당 노드의 kubelet이 컨테이너를 띄우고 Running을 보고함.배정(scheduler)과 실행(kubelet)은 다른 구성요소가 함.다른 조건을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-nw76v | node-3 | Running"
+   ]
+  }
+ },
+ "2-4": {
+  "steps": 4,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "시우/web-6d4f9c7b8-9nw76//lobby///"
+  ],
+  "m": {
+   "lines": "층 사정이 바뀌면(자리가 나거나 공사가 끝나면) 다시 시도함.다른 신입을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "시우 | - | 자리 미정"
+   ]
+  },
+  "t": {
+   "lines": "클러스터 상태가 바뀌면 스케줄러가 다시 시도함.다른 조건을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-9nw76 | <none> | Pending"
+   ]
+  }
+ },
+ "3-0": {
+  "steps": 6,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "시우/web-6d4f9c7b8-9nw76/2/run///",
+   "수아/web-6d4f9c7b8-bqr4t/1/run///"
+  ],
+  "m": {
+   "lines": "정원 담당은 정원표에, 기획 담당은 계획서에 '3/3'을 적음.계획서 → 정원표 → 직원으로 이어져 있음(장부의 └).아래 버튼으로 다시 볼 수 있음.",
+   "ledger": [
+    "계획서: 영업팀 | - | 근무 3/3",
+    "└ 정원표 (매뉴얼 v1) | - | 근무 3/3",
+    "　└ 지우 | 1층 | 근무",
+    "　└ 시우 | 3층 | 근무",
+    "　└ 수아 | 2층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "ReplicaSet·Deployment 컨트롤러가 각자 status를 갱신함 → READY 3/3.ownerReferences: Pod → ReplicaSet → Deployment.아래 버튼으로 다시 볼 수 있음.",
+   "ledger": [
+    "deployment/web | - | READY 3/3",
+    "└ replicaset/web-6d4f9c7b8 | - | ready 3/3",
+    "　└ web-6d4f9c7b8-72prg | node-1 | Running",
+    "　└ web-6d4f9c7b8-9nw76 | node-3 | Running",
+    "　└ web-6d4f9c7b8-bqr4t | node-2 | Running"
+   ]
+  }
+ },
+ "4-0": {
+  "steps": 6,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/term///",
+   "시우/web-6d4f9c7b8-9nw76/0/term///",
+   "수아/web-6d4f9c7b8-bqr4t/1/run///",
+   "민지/web-6d4f9c7b8-57f6b/2/run///",
+   "지호/web-6d4f9c7b8-v4l6b/1/run///"
+  ],
+  "m": {
+   "lines": "층 관리자가 신입을 앉힘 → 정원 3명 회복.정전된 층 직원은 '퇴사 예정'인 채로 남음. 층이 복구되어야 정리됨.다른 경우를 골라 비교해 볼 수 있음.",
+   "ledger": [
+    "1층 출입 기록 | - | 연락 두절",
+    "2층 출입 기록 | - | 정상",
+    "3층 출입 기록 | - | 정상",
+    "지우 | 1층 | 퇴사 예정",
+    "시우 | 1층 | 퇴사 예정",
+    "수아 | 2층 | 근무",
+    "민지 | 3층 | 근무",
+    "지호 | 2층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "kubelet이 새 Pod를 실행 → 3/3 회복.장애 노드의 Pod는 Terminating으로 남음. 노드가 돌아오거나 Node를 지워야 정리됨.다른 경우를 골라 비교해 볼 수 있음.",
+   "ledger": [
+    "node/node-1 | - | Unknown",
+    "node/node-2 | - | Ready",
+    "node/node-3 | - | Ready",
+    "web-6d4f9c7b8-72prg | node-1 | Terminating",
+    "web-6d4f9c7b8-9nw76 | node-1 | Terminating",
+    "web-6d4f9c7b8-bqr4t | node-2 | Running",
+    "web-6d4f9c7b8-57f6b | node-3 | Running",
+    "web-6d4f9c7b8-v4l6b | node-2 | Running"
+   ]
+  }
+ },
+ "4-1": {
+  "steps": 6,
+  "replayed": false,
+  "pods": [
+   "수아/web-6d4f9c7b8-bqr4t/1/run///",
+   "민지/web-6d4f9c7b8-57f6b/2/run///",
+   "지호/web-6d4f9c7b8-v4l6b/1/run///"
+  ],
+  "m": {
+   "lines": "새 직원이 앉아 정원 3명 회복. 그 층 직원은 정리 후 나가고 장부에서 지워짐.정전과 달리 '퇴사 예정'이 남지 않음 — 연락이 됐기 때문.다른 경우를 골라 비교해 볼 수 있음.",
+   "ledger": [
+    "1층 출입 기록 | - | 일 못 함",
+    "2층 출입 기록 | - | 정상",
+    "3층 출입 기록 | - | 정상",
+    "수아 | 2층 | 근무",
+    "민지 | 3층 | 근무",
+    "지호 | 2층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "새 Pod Running → 3/3. 기존 Pod는 종료 후 etcd에서 삭제됨.Unknown과 달리 Terminating이 남지 않음 — kubelet이 확인해 줬기 때문.다른 경우를 골라 비교해 볼 수 있음.",
+   "ledger": [
+    "node/node-1 | - | NotReady",
+    "node/node-2 | - | Ready",
+    "node/node-3 | - | Ready",
+    "web-6d4f9c7b8-bqr4t | node-2 | Running",
+    "web-6d4f9c7b8-57f6b | node-3 | Running",
+    "web-6d4f9c7b8-v4l6b | node-2 | Running"
+   ]
+  }
+ },
+ "4-2": {
+  "steps": 5,
+  "replayed": false,
+  "pods": [
+   "수아/web-6d4f9c7b8-bqr4t/1/run///",
+   "민지/web-6d4f9c7b8-57f6b/2/run///",
+   "지호/web-6d4f9c7b8-v4l6b/1/run///"
+  ],
+  "m": {
+   "lines": "새 직원이 앉고, 1층 직원은 정리 후 나감. 1층이 비어 점검할 수 있음.장애와 달리 기다림도, 남는 '퇴사 예정'도 없음.다른 경우를 골라 비교해 볼 수 있음.",
+   "ledger": [
+    "1층 출입 기록 | - | 배치 금지",
+    "2층 출입 기록 | - | 정상",
+    "3층 출입 기록 | - | 정상",
+    "수아 | 2층 | 근무",
+    "민지 | 3층 | 근무",
+    "지호 | 2층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "새 Pod Running → 3/3. 기존 Pod 삭제 완료 → node-1이 비어 작업 가능.점검이 끝나면 kubectl uncordon으로 배치 금지를 풂.다른 경우를 골라 비교해 볼 수 있음.",
+   "ledger": [
+    "node/node-1 | - | Ready,SchedulingDisabled",
+    "node/node-2 | - | Ready",
+    "node/node-3 | - | Ready",
+    "web-6d4f9c7b8-bqr4t | node-2 | Running",
+    "web-6d4f9c7b8-57f6b | node-3 | Running",
+    "web-6d4f9c7b8-v4l6b | node-2 | Running"
+   ]
+  }
+ },
+ "5-0": {
+  "steps": 2,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "시우/web-6d4f9c7b8-9nw76/1/run///",
+   "수아/web-6d4f9c7b8-bqr4t/2/run///"
+  ],
+  "m": {
+   "lines": "장부에는 바뀐 것이 없음. 계속 근무 중.단, 층 전체 메모리가 모자라면 예약을 넘게 쓴 직원부터 내보내질 수 있음.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "시우 | 2층 | 근무",
+    "수아 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "Pod status 변화 없음(Running).단, 노드 메모리 압박 시 requests를 넘게 쓰는 Pod가 먼저 축출 대상이 됨.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-9nw76 | node-2 | Running",
+    "web-6d4f9c7b8-bqr4t | node-3 | Running"
+   ]
+  }
+ },
+ "5-1": {
+  "steps": 3,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "시우/web-6d4f9c7b8-9nw76/1/run///",
+   "수아/web-6d4f9c7b8-bqr4t/2/run///"
+  ],
+  "m": {
+   "lines": "층 관리자가 같은 자리에서 직원을 다시 일으킴 → 재시작 1회.퇴사가 아님 — 이름·자리 그대로(같은 Pod). 쌓던 서류(메모리)만 사라짐.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "시우 | 2층 | 근무 (재시작 1)",
+    "수아 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "kubelet이 restartPolicy: Always에 따라 같은 Pod 안에서 컨테이너를 다시 띄움.Pod 이름·IP 그대로, RESTARTS +1. 컨트롤러·스케줄러는 관여 안 함.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-9nw76 | node-2 | Running · RESTARTS 1",
+    "web-6d4f9c7b8-bqr4t | node-3 | Running"
+   ]
+  }
+ },
+ "5-2": {
+  "steps": 2,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "시우/web-6d4f9c7b8-9nw76/1/run///",
+   "수아/web-6d4f9c7b8-bqr4t/2/run///"
+  ],
+  "m": {
+   "lines": "장부에는 아무 표시도 없음. 계속 '근무'.느려진 것은 장부로는 안 보임 — 응답 시간 같은 지표로 봐야 함.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "시우 | 2층 | 근무",
+    "수아 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "Pod status는 Running 그대로. 쓰로틀링은 status에 안 나옴.cgroup 통계(throttled 시간)나 모니터링 지표로 확인해야 함.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-9nw76 | node-2 | Running",
+    "web-6d4f9c7b8-bqr4t | node-3 | Running"
+   ]
+  }
+ },
+ "5-3": {
+  "steps": 3,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run///",
+   "시우/web-6d4f9c7b8-9nw76/1/run///",
+   "수아/web-6d4f9c7b8-bqr4t/2/run///"
+  ],
+  "m": {
+   "lines": "장부: '재시작 대기'(재시작 3회). 서류량이나 칸막이 크기를 고쳐야 끝남.정원 담당은 아무것도 안 함 — 직원 수는 그대로 3명이기 때문.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "지우 | 1층 | 근무",
+    "시우 | 2층 | 재시작 대기 (재시작 3)",
+    "수아 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "status: CrashLoopBackOff, RESTARTS 3. limits를 늘리거나 메모리 사용을 줄여야 해결됨.ReplicaSet은 관여 안 함 — Pod 수는 그대로 3개.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-9nw76 | node-2 | CrashLoopBackOff · RESTARTS 3",
+    "web-6d4f9c7b8-bqr4t | node-3 | Running"
+   ]
+  }
+ },
+ "6-0": {
+  "steps": 7,
+  "replayed": false,
+  "pods": [
+   "민지/web-7c5b8d9f6-57f6b/1/run/v2//",
+   "도윤/web-7c5b8d9f6-6b6hc/2/run/v2//",
+   "유나/web-7c5b8d9f6-94z62/2/run/v2//"
+  ],
+  "m": {
+   "lines": "개정 끝. 일하는 직원이 3명 밑으로 내려간 적이 없음.v1 정원표는 0명으로 장부에 남겨 둠 — 되돌릴 때 씀.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "계획서: 영업팀 (매뉴얼 v2) | - | 근무 3/3",
+    "└ 정원표 (매뉴얼 v1) | - | 근무 0/0",
+    "└ 정원표 (매뉴얼 v2) | - | 근무 3/3",
+    "　└ 민지 | 2층 | 근무",
+    "　└ 도윤 | 3층 | 근무",
+    "　└ 유나 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "롤아웃 완료. 준비된 Pod가 3개 밑으로 내려간 적 없음(무중단).이전 ReplicaSet은 replicas 0으로 남음 → kubectl rollout undo에 쓰임.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "deployment/web (web:v2) | - | READY 3/3",
+    "└ replicaset/web-6d4f9c7b8 | - | ready 0/0",
+    "└ replicaset/web-7c5b8d9f6 | - | ready 3/3",
+    "　└ web-7c5b8d9f6-57f6b | node-2 | Running",
+    "　└ web-7c5b8d9f6-6b6hc | node-3 | Running",
+    "　└ web-7c5b8d9f6-94z62 | node-3 | Running"
+   ]
+  }
+ },
+ "6-1": {
+  "steps": 7,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run/v1//",
+   "시우/web-6d4f9c7b8-9nw76/1/run/v1//",
+   "수아/web-6d4f9c7b8-bqr4t/2/run/v1//"
+  ],
+  "m": {
+   "lines": "원래대로 v1 3명. v3 직원은 준비가 안 돼 실제 업무를 한 번도 맡지 않았음.v3 정원표는 0명으로 남음.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "계획서: 영업팀 (매뉴얼 v1) | - | 근무 3/3",
+    "└ 정원표 (매뉴얼 v1) | - | 근무 3/3",
+    "　└ 지우 | 1층 | 근무",
+    "　└ 시우 | 2층 | 근무",
+    "　└ 수아 | 3층 | 근무",
+    "└ 정원표 (매뉴얼 v3) | - | 근무 0/0"
+   ]
+  },
+  "t": {
+   "lines": "v1 ReplicaSet 3/3. Ready가 안 된 v3 Pod에는 요청이 가지 않았음.v3 ReplicaSet은 replicas 0으로 이력에 남음.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "deployment/web (web:v1) | - | READY 3/3",
+    "└ replicaset/web-6d4f9c7b8 | - | ready 3/3",
+    "　└ web-6d4f9c7b8-72prg | node-1 | Running",
+    "　└ web-6d4f9c7b8-9nw76 | node-2 | Running",
+    "　└ web-6d4f9c7b8-bqr4t | node-3 | Running",
+    "└ replicaset/web-5f8d7c4b9 | - | ready 0/0"
+   ]
+  }
+ },
+ "6-2": {
+  "steps": 3,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run/v1//",
+   "시우/web-6d4f9c7b8-9nw76/1/run/v1//",
+   "수아/web-6d4f9c7b8-bqr4t/2/run/v1//"
+  ],
+  "m": {
+   "lines": "층 관리자가 같은 자리에서 직원을 다시 깨움 → 재시작 1회. 퇴사 아님.출근 준비가 오래 걸리는 직원은 '출근 확인'이 끝날 때까지 이 점검을 미룸.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "계획서: 영업팀 (매뉴얼 v1) | - | 근무 3/3",
+    "└ 정원표 (매뉴얼 v1) | - | 근무 3/3",
+    "　└ 지우 | 1층 | 근무",
+    "　└ 시우 | 2층 | 근무 (재시작 1)",
+    "　└ 수아 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "kubelet이 컨테이너를 죽이고 다시 띄움 → RESTARTS +1. Pod는 그대로.시작이 느린 앱은 startup probe가 성공할 때까지 liveness를 미룸.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "deployment/web (web:v1) | - | READY 3/3",
+    "└ replicaset/web-6d4f9c7b8 | - | ready 3/3",
+    "　└ web-6d4f9c7b8-72prg | node-1 | Running",
+    "　└ web-6d4f9c7b8-9nw76 | node-2 | Running · RESTARTS 1",
+    "　└ web-6d4f9c7b8-bqr4t | node-3 | Running"
+   ]
+  }
+ },
+ "6-3": {
+  "steps": 3,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run/v1//",
+   "시우/web-6d4f9c7b8-9nw76/1/run/v1//",
+   "수아/web-6d4f9c7b8-bqr4t/2/run/v1//"
+  ],
+  "m": {
+   "lines": "일이 줄자 다시 \"받을 수 있음\" ✓ → 장부에 '근무'. 재시작 0회.멍함(liveness) = 다시 깨움, 바쁨(readiness) = 잠깐 빼 둠.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "계획서: 영업팀 (매뉴얼 v1) | - | 근무 3/3",
+    "└ 정원표 (매뉴얼 v1) | - | 근무 3/3",
+    "　└ 지우 | 1층 | 근무",
+    "　└ 시우 | 2층 | 근무",
+    "　└ 수아 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "readiness 다시 성공 → Ready=True, Service 대상에 복귀. RESTARTS 0.liveness 실패 = 재시작, readiness 실패 = 요청에서만 제외.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "deployment/web (web:v1) | - | READY 3/3",
+    "└ replicaset/web-6d4f9c7b8 | - | ready 3/3",
+    "　└ web-6d4f9c7b8-72prg | node-1 | Running",
+    "　└ web-6d4f9c7b8-9nw76 | node-2 | Running",
+    "　└ web-6d4f9c7b8-bqr4t | node-3 | Running"
+   ]
+  }
+ },
+ "7-0": {
+  "steps": 4,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run//10.244.1.5/105",
+   "시우/web-6d4f9c7b8-9nw76/1/run//10.244.2.5/205",
+   "수아/web-6d4f9c7b8-bqr4t/2/run//10.244.3.5/305",
+   "민지/web-6d4f9c7b8-57f6b/2/run//10.244.3.6/306"
+  ],
+  "m": {
+   "lines": "번호 안내도 '영업팀 = ☎900'을 번호부에 올림.이제 이름(영업팀)만 알면 전화할 수 있음.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "대표번호: 영업팀 ☎900 | - | 대표번호",
+    "└ 연결 명단 | - | 3명",
+    "지우 | 1층 | 근무",
+    "시우 | 2층 | 근무",
+    "수아 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "CoreDNS가 Service를 watch해 web.default.svc.cluster.local → 10.96.0.15 레코드를 제공함.클라이언트는 이름만 알면 됨.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "service/web | - | ClusterIP 10.96.0.15",
+    "└ endpointslice/web-x7k2p | - | 3 ready",
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-9nw76 | node-2 | Running",
+    "web-6d4f9c7b8-bqr4t | node-3 | Running"
+   ]
+  }
+ },
+ "7-1": {
+  "steps": 3,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run//10.244.1.5/105",
+   "시우/web-6d4f9c7b8-9nw76/1/run//10.244.2.5/205",
+   "수아/web-6d4f9c7b8-bqr4t/2/run//10.244.3.5/305",
+   "민지/web-6d4f9c7b8-57f6b/2/run//10.244.3.6/306"
+  ],
+  "m": {
+   "lines": "다시 걸면 다른 직원이 받을 수 있음. 대표번호는 그대로, 받는 사람만 바뀜.전화가 여러 직원에게 나뉨(부하 분산).다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "대표번호: 영업팀 ☎900 | - | 대표번호",
+    "└ 연결 명단 | - | 3명",
+    "지우 | 1층 | 근무",
+    "시우 | 2층 | 근무",
+    "수아 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "새 연결마다 엔드포인트를 다시 고름 → 요청이 Pod들에 나뉨.한 연결(keep-alive) 안의 요청들은 같은 Pod로 감.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "service/web | - | ClusterIP 10.96.0.15",
+    "└ endpointslice/web-x7k2p | - | 3 ready",
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-9nw76 | node-2 | Running",
+    "web-6d4f9c7b8-bqr4t | node-3 | Running"
+   ]
+  }
+ },
+ "7-2": {
+  "steps": 5,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run//10.244.1.5/105",
+   "수아/web-6d4f9c7b8-bqr4t/2/run//10.244.3.5/305",
+   "민지/web-6d4f9c7b8-57f6b/2/run//10.244.3.6/306",
+   "지호/web-6d4f9c7b8-v4l6b/1/run//10.244.2.6/206"
+  ],
+  "m": {
+   "lines": "대표번호 ☎900은 처음부터 그대로. 거는 쪽은 직원이 바뀐 걸 몰라도 됨.이번 전화는 신입에게 연결됨.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "대표번호: 영업팀 ☎900 | - | 대표번호",
+    "└ 연결 명단 | - | 3명",
+    "지우 | 1층 | 근무",
+    "수아 | 3층 | 근무",
+    "지호 | 2층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "ClusterIP는 그대로, 뒤의 Pod IP만 바뀜. 클라이언트는 이름·ClusterIP만 앎.새 연결이 새 Pod로 감.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "service/web | - | ClusterIP 10.96.0.15",
+    "└ endpointslice/web-x7k2p | - | 3 ready",
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-bqr4t | node-3 | Running",
+    "web-6d4f9c7b8-v4l6b | node-2 | Running"
+   ]
+  }
+ },
+ "7-3": {
+  "steps": 4,
+  "replayed": false,
+  "pods": [
+   "지우/web-6d4f9c7b8-72prg/0/run//10.244.1.5/105",
+   "시우/web-6d4f9c7b8-9nw76/1/run//10.244.2.5/205",
+   "수아/web-6d4f9c7b8-bqr4t/2/run//10.244.3.5/305",
+   "민지/web-6d4f9c7b8-57f6b/2/run//10.244.3.6/306"
+  ],
+  "m": {
+   "lines": "다시 받을 수 있게 되면 명단·규칙에 돌아옴 → 다시 3명.바쁨(readiness)은 연결만 잠시 빼 둠 — 직원은 그대로.다른 일을 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "대표번호: 영업팀 ☎900 | - | 대표번호",
+    "└ 연결 명단 | - | 3명",
+    "지우 | 1층 | 근무",
+    "시우 | 2층 | 근무",
+    "수아 | 3층 | 근무"
+   ]
+  },
+  "t": {
+   "lines": "readiness 다시 성공 → ready=true → kube-proxy 규칙에 복귀.RESTARTS 0, Pod IP 그대로.다른 부하를 골라 다시 해 볼 수 있음.",
+   "ledger": [
+    "service/web | - | ClusterIP 10.96.0.15",
+    "└ endpointslice/web-x7k2p | - | 3 ready",
+    "web-6d4f9c7b8-72prg | node-1 | Running",
+    "web-6d4f9c7b8-9nw76 | node-2 | Running",
+    "web-6d4f9c7b8-bqr4t | node-3 | Running"
+   ]
+  }
+ }
+}
