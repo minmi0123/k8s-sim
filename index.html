@@ -11,8 +11,10 @@
   .wrap { max-width: 1030px; margin: 0 auto; padding: 12px; }
   header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
   h1 { font-size: 17px; margin: 0 6px 0 0; }
-  .scenes { display: flex; gap: 4px; flex-wrap: wrap; }
-  .scenes button { font: inherit; font-size: 12px; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); }
+  /* 장면 탭은 늘 둘째 줄 한 줄 — 비유/용어로 글 길이가 바뀌어도 머리 틀은 그대로. 넘치면 옆으로 넘김 */
+  .scenes { order: 3; width: 100%; display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .scenes::-webkit-scrollbar { display: none; }
+  .scenes button { flex: none; font: inherit; font-size: 12px; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); }
   .scenes button.on { background: var(--ink); color: #fff; }
   .scenes button:disabled { opacity: .35; }
   .mode { display: flex; border: 2px solid var(--ink); border-radius: 6px; overflow: hidden; }
@@ -98,9 +100,6 @@
   @media (max-width: 700px) {
     .wrap { padding: 8px; }
     h1 { font-size: 15px; }
-    .scenes { order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-    .scenes::-webkit-scrollbar { display: none; }
-    .scenes button { flex: none; }
     .tag { font-size: 8px; padding: 0 2px; }
     .tag.pod { font-size: 7px; padding: 0 2px; }
     .tag .full { display: none; }
