@@ -163,7 +163,7 @@ function openTerm(k, btn) {
   ana.appendChild(el('span', '', '비유'));
   ana.appendChild(document.createTextNode(t.ana));
   box.appendChild(ana);
-  box.appendChild(el('p', 'more', t.more));
+  box.appendChild(el('p', 'more', lines(t.more)));
 }
 function renderTour(i) {
   tourAt = i;

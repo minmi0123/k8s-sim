@@ -134,7 +134,7 @@ body.noscroll { overflow: hidden; }
 .tterm p { margin: 6px 0 0; font-size: 14px; line-height: 1.65; word-break: keep-all; }
 .tterm .def { font-weight: bold; }
 .tterm .ana span { display: inline-block; font-size: 11px; font-weight: bold; color: #fff; background: var(--accent); border-radius: 3px; padding: 0 5px; margin-right: 6px; }
-.tterm .more { color: #5a4a56; }
+.tterm .more { color: #5a4a56; white-space: pre-line; }
 .tscenes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 8px; font-size: 12px; color: #7a6a6a; }
 .tscenes { margin-top: 14px; gap: 6px; }
 #tour .tscenes button { font-size: 13px; padding: 5px 10px; }
