@@ -49,7 +49,7 @@ const TERM = {
   kubelet: { q: 'kubelet이란?', def: '노드마다 돌면서 그 노드의 Pod를 실제로 실행하는 에이전트입니다.', ana: '층 관리자',
     more: '실행은 컨테이너 런타임에 맡깁니다. 프로브를 검사하고 컨테이너를 다시 켭니다(장면 ⑤ ⑥). Lease 갱신이 끊기면 노드 장애로 봅니다(장면 ④).', sc: [4, 5, 6] },
   svc: { q: 'Service란?', def: '바뀌는 Pod들 앞에 고정된 주소 하나를 두는 오브젝트입니다.', ana: '대표번호',
-    more: 'label selector로 Pod를 고르고, Ready인 Pod만 EndpointSlice에 올라갑니다. CoreDNS가 이름을 ClusterIP로 알려 줍니다(번호 안내).', sc: [7] },
+    more: 'label selector로 Pod를 고릅니다. EndpointSlice에는 Pod마다 ready 여부가 적히고, ready인 Pod만 요청을 받습니다. CoreDNS가 이름을 ClusterIP로 알려 줍니다(번호 안내).', sc: [7] },
 };
 
 // 슬라이드: kick(번호 · 분류) · title(질문) · body(비유/용어) · terms · pic() → { img, hl?, dim?, tags } · scenes(마지막 장)
