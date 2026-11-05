@@ -62,7 +62,7 @@ const TOUR = [
     terms: [],
     pic: () => {
       const s = tourShot(TOUR_SC);
-      return { img: s.img, tags: [num('①', tagMe), num('②', tagApi), tagEtcd, num('③', tagRs), num('④', tagSch), num('⑤', tagKubs[2])] };
+      return { img: s.img, tags: [num('①', tagMe), num('②', tagApi), tagEtcd, num('③', tagRs), { ...num('④', tagSch), at: [22, 30] }, num('⑤', tagKubs[2])] };
     } },
   { kick: '02 · 회사', title: '회사는 무엇을 대신 해 줄까',
     body: {

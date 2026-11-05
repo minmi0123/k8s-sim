@@ -145,7 +145,8 @@ function renderTour(i) {
   const s = TOUR[i];
   $('tourKick').textContent = s.kick;
   $('tourTitle').textContent = s.title;
-  bothTxt($('tourBody'), s.body);
+  const lines = (x) => x.replace(/([.?!]) +/g, '$1\n');   // 문장마다 줄을 바꿈 (CSS pre-line)
+  bothTxt($('tourBody'), { m: lines(s.body.m), t: lines(s.body.t) });
   drawTourPic(tourPics[i] || (tourPics[i] = s.pic()));
   $('tourTerms').innerHTML = '';
   s.terms.forEach((k) => {
