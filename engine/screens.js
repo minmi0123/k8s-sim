@@ -72,7 +72,7 @@ function renderDex() {
       const add = (cls, text) => { const d = document.createElement('div'); d.className = cls; d.textContent = text; tx.appendChild(d); return d; };
       bothTxt(add('nm'), { m: e.m, t: e.t });   // 지금 모드 이름을 크게, 다른 쪽을 작게
       bothTxt(add('tm'), { m: e.t, t: e.m });
-      add('ds', e.d);   // 나오는 장면은 목록엔 안 둠 — 카드에서 (2026-11-05 사용자 요청)
+      bothTxt(add('ds'), { m: e.d, t: e.dt || e.d });   // 짧은 설명: 비유판 d / 용어판 dt
       it.appendChild(tx);
       const k = dexOrder.push(e) - 1;
       it.addEventListener('click', () => openCard(k));   // 누르면 하나를 크게 (카드)
