@@ -13,9 +13,11 @@ function show(name) {
   window.scrollTo(0, 0);
   if (name === 'dex') { spyHold = 0; dexNavOn(0); }
   if (name === 'tour') renderTour(tourAt);
+  closeCard();
 }
 
 const CIRC = '①②③④⑤⑥⑦';
+const lines = (x) => x.replace(/([.?!]) +/g, '$1\n');   // 문장마다 줄을 바꿈 (CSS pre-line)
 let spyHold = 0;
 const dexNavOn = (i) => [...$('dexNav').children].forEach((b, k) => b.classList.toggle('on', k === i));
 function dexSpy() {   // 머리 바로 아래를 지난 마지막 묶음을 켬. 맨 끝이면 마지막 묶음
@@ -76,16 +78,51 @@ function renderDex() {
         const b = document.createElement('button');
         b.textContent = CIRC[n - 1];
         b.title = SCENES[n - 1].m;
-        b.addEventListener('click', () => openScene(n));
+        b.addEventListener('click', (ev) => { ev.stopPropagation(); openScene(n); });
         scs.appendChild(b);
       });
       it.appendChild(tx);
+      const k = dexOrder.push(e) - 1;
+      it.addEventListener('click', () => openCard(k));   // 누르면 하나를 크게 (카드)
       list.appendChild(it);
     });
     box.appendChild(list);
   });
   $('dexCount').textContent = `용어 ${DEX.length}개`;
 }
+
+// 도감 카드: 큰 도트 · 이름 · 긴 설명(e.l, 없으면 e.d) · 나오는 장면 · ◀ ▶ 로 옆 항목
+const dexOrder = [];   // 목록에 보이는 순서 (묶음 순)
+let cardAt = -1;
+function openCard(k) {
+  cardAt = k;
+  const e = dexOrder[k], c = $('dexCard');
+  const inGrp = dexOrder.filter((q) => q.g === e.g);
+  $('cardKick').textContent = `${e.g} · ${inGrp.indexOf(e) + 1} / ${inGrp.length}`;
+  const art = $('cardArt'), src = e.art(), z = Math.max(1, Math.floor(Math.min(40 / src.width, 30 / src.height)));
+  art.width = 48; art.height = 36;   // 작은 그림은 크게 키워 가운데에 (도트 그대로)
+  const g = art.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.drawImage(src, Math.floor((48 - src.width * z) / 2), Math.floor((36 - src.height * z) / 2), src.width * z, src.height * z);
+  $('cardName').textContent = e.m;
+  $('cardTerm').textContent = e.t;
+  $('cardText').textContent = lines(e.l || e.d);
+  const scs = $('cardScenes');
+  scs.innerHTML = '';
+  scs.appendChild(el('span', '', e.sc === ALL ? '모든 장면에 나옵니다' : '장면에서 보기'));
+  sceneBtns(scs, e.sc === ALL ? [] : e.sc);
+  const pv = dexOrder[k - 1], nx = dexOrder[k + 1];
+  $('cardPrev').disabled = !pv; $('cardPrev').textContent = pv ? `◀ ${pv.m}` : '◀';
+  $('cardNext').disabled = !nx; $('cardNext').textContent = nx ? `${nx.m} ▶` : '▶';
+  c.hidden = false;
+  document.body.classList.add('noscroll');
+}
+function closeCard() {
+  cardAt = -1;
+  $('dexCard').hidden = true;
+  document.body.classList.remove('noscroll');
+}
+const cardGo = (d) => { const k = cardAt + d; if (cardAt >= 0 && dexOrder[k]) openCard(k); };
 
 // ===== 살펴보기 (내용은 게임 tour.js: TOUR · TERM — 그림은 slide.pic() 이 준다) =====
 
@@ -145,7 +182,6 @@ function renderTour(i) {
   const s = TOUR[i];
   $('tourKick').textContent = s.kick;
   $('tourTitle').textContent = s.title;
-  const lines = (x) => x.replace(/([.?!]) +/g, '$1\n');   // 문장마다 줄을 바꿈 (CSS pre-line)
   bothTxt($('tourBody'), { m: lines(s.body.m), t: lines(s.body.t) });
   drawTourPic(tourPics[i] || (tourPics[i] = s.pic()));
   $('tourTerms').innerHTML = '';
@@ -185,9 +221,15 @@ function initScreens() {
     d.addEventListener('click', () => renderTour(k));
     $('tourDots').appendChild(d);
   });
+  $('cardClose').addEventListener('click', closeCard);
+  $('dexCard').addEventListener('click', (e) => { if (e.target === $('dexCard')) closeCard(); });   // 카드 밖(어두운 곳)을 눌러도 닫힘
+  $('cardPrev').addEventListener('click', () => cardGo(-1));
+  $('cardNext').addEventListener('click', () => cardGo(1));
   document.addEventListener('keydown', (e) => {
-    if (screen !== 'tour') return;
-    if (e.key === 'ArrowLeft') tourGo(-1);
-    if (e.key === 'ArrowRight') tourGo(1);
+    const go = screen === 'tour' ? tourGo : screen === 'dex' && cardAt >= 0 ? cardGo : null;
+    if (!go) return;
+    if (e.key === 'ArrowLeft') go(-1);
+    if (e.key === 'ArrowRight') go(1);
+    if (e.key === 'Escape' && screen === 'dex') closeCard();
   });
 }

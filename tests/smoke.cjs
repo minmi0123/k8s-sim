@@ -76,6 +76,17 @@ async function runCase(arg) {
   });
   const opened = await page.evaluate(() => sim.screen === 'sim' && document.querySelector('#scenes button.on').textContent);
   if (!opened || !opened.startsWith('④')) { console.log(`살펴보기 → 장면 ④ 이동 실패: ${opened}`); process.exit(1); }
+  // 도감 카드: 모든 항목을 차례로 열고(▶), 마지막에 닫기
+  const cards = await page.evaluate(() => {
+    sim.show('dex');
+    document.querySelector('.dexit').click();
+    const seen = [document.getElementById('cardName').textContent];
+    while (!document.getElementById('cardNext').disabled) { document.getElementById('cardNext').click(); seen.push(document.getElementById('cardName').textContent); }
+    const empty = [...document.querySelectorAll('.dexit')].length !== seen.length || !document.getElementById('cardText').textContent;
+    document.getElementById('cardClose').click();
+    return { n: seen.length, total: sim.DEX.length, empty, closed: document.getElementById('dexCard').hidden };
+  });
+  if (cards.n !== cards.total || cards.empty || !cards.closed) { console.log(`도감 카드 이상: ${JSON.stringify(cards)}`); process.exit(1); }
   await page.evaluate(() => sim.show('sim'));
 
   // 갈래 목록: 칩이 있으면 칩마다, 없으면 클릭할 수 있는 직원마다
