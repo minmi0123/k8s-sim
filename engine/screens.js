@@ -164,7 +164,6 @@ function openTerm(k, btn) {
   ana.appendChild(document.createTextNode(t.ana));
   box.appendChild(ana);
   box.appendChild(el('p', 'more', t.more));
-  if (t.sc.length) { const scs = el('div', 'scs', '장면에서 보기'); sceneBtns(scs, t.sc); box.appendChild(scs); }
 }
 function renderTour(i) {
   tourAt = i;

@@ -135,8 +135,7 @@ body.noscroll { overflow: hidden; }
 .tterm .def { font-weight: bold; }
 .tterm .ana span { display: inline-block; font-size: 11px; font-weight: bold; color: #fff; background: var(--accent); border-radius: 3px; padding: 0 5px; margin-right: 6px; }
 .tterm .more { color: #5a4a56; }
-.tterm .scs, .tscenes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 8px; font-size: 12px; color: #7a6a6a; }
-#tour .tterm .scs button { font-size: 12px; padding: 0 6px; }
+.tscenes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 8px; font-size: 12px; color: #7a6a6a; }
 .tscenes { margin-top: 14px; gap: 6px; }
 #tour .tscenes button { font-size: 13px; padding: 5px 10px; }
 .tnav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 14px; }
