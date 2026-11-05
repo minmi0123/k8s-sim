@@ -72,15 +72,7 @@ function renderDex() {
       const add = (cls, text) => { const d = document.createElement('div'); d.className = cls; d.textContent = text; tx.appendChild(d); return d; };
       add('nm', e.m);
       add('tm', e.t);
-      add('ds', e.d);
-      const scs = add('scs', e.sc === ALL ? '모든 장면' : '나오는 장면');
-      if (e.sc !== ALL) e.sc.forEach((n) => {
-        const b = document.createElement('button');
-        b.textContent = CIRC[n - 1];
-        b.title = SCENES[n - 1].m;
-        b.addEventListener('click', (ev) => { ev.stopPropagation(); openScene(n); });
-        scs.appendChild(b);
-      });
+      add('ds', e.d);   // 나오는 장면은 목록엔 안 둠 — 카드에서 (2026-11-05 사용자 요청)
       it.appendChild(tx);
       const k = dexOrder.push(e) - 1;
       it.addEventListener('click', () => openCard(k));   // 누르면 하나를 크게 (카드)

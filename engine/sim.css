@@ -74,7 +74,7 @@ canvas { display: block; width: 100%; image-rendering: pixelated; image-renderin
 .dexhead .row { display: flex; align-items: center; gap: 10px; }
 .dexhead h2 { font-size: 18px; margin: 0; color: var(--ink); }
 .dexhead .cnt { margin-left: auto; font-size: 12px; color: #7a6a6a; }
-.dexhead button, .dexit .scs button { font: inherit; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; }
+.dexhead button { font: inherit; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; }
 .dexhead .row button { font-size: 13px; padding: 4px 10px; }
 .dexnav { display: flex; gap: 4px; margin-top: 8px; }
 .dexnav button { font-size: 13px; padding: 3px 12px; }
@@ -86,9 +86,7 @@ canvas { display: block; width: 100%; image-rendering: pixelated; image-renderin
 .dexit .nm { font-weight: bold; font-size: 15px; color: var(--ink); }
 .dexit .tm { font-size: 12px; color: var(--accent); font-weight: bold; }
 .dexit .ds { font-size: 13px; line-height: 1.45; margin-top: 3px; }
-.dexit .scs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; font-size: 11px; color: #7a6a6a; align-items: center; }
-.dexit .scs button { font-size: 12px; padding: 0 5px; }
-@media (hover: hover) { .dexhead button:not(.on):hover, .dexit .scs button:hover { background: #fff3d6; } }
+@media (hover: hover) { .dexhead button:not(.on):hover { background: #fff3d6; } }
 .dexit { cursor: pointer; }
 @media (hover: hover) { .dexit:hover { background: #fff3d6; } }
 /* 도감 카드: 목록 위에 덮어 하나를 크게 */
