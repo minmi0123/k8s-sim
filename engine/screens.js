@@ -203,15 +203,15 @@ function renderTour(i) {
 const tourGo = (d) => { const i = tourAt + d; if (i >= 0 && i < TOUR.length) renderTour(i); };
 
 function initScreens() {
-  $('startSub').textContent = `장면 ${SCENES.length}개`;
-  $('dexSub').textContent = `용어 ${DEX.length}개`;
+  $('startSub').textContent = `장면 ${SCENES.length}개 · 직접 해 보기`;
+  $('dexSub').textContent = `용어 ${DEX.length}개 · 하나씩 넘겨 보기`;
   $('goStart').addEventListener('click', () => show('sim'));
   $('goDex').addEventListener('click', () => { dexFrom = 'home'; show('dex'); });
   $('toDex').addEventListener('click', () => { dexFrom = 'sim'; show('dex'); });
   $('toHome').addEventListener('click', () => show('home'));
   $('dexBack').addEventListener('click', () => show(dexFrom));
   renderDex();
-  $('tourSub').textContent = `${TOUR.length}장`;
+  $('tourSub').textContent = `${TOUR.length}장 · 전체 구조 이해`;
   $('goTour').addEventListener('click', () => show('tour'));
   $('tourBack').addEventListener('click', () => show('home'));
   $('tourPrev').addEventListener('click', () => tourGo(-1));
