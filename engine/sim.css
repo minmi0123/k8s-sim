@@ -75,7 +75,11 @@ canvas { display: block; width: 100%; image-rendering: pixelated; image-renderin
 .dexhead h2 { font-size: 18px; margin: 0; color: var(--ink); }
 .dexhead .cnt { margin-left: auto; font-size: 12px; color: #7a6a6a; }
 .dexhead button { font: inherit; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; }
-.dexhead .row button { font-size: 13px; padding: 4px 10px; }
+.dexhead .row button { font-size: 13px; padding: 4px 10px; white-space: nowrap; }
+.dexhead h2 { white-space: nowrap; }
+.dexhead .mode { flex: none; }
+.dexhead .mode button { border: 0; border-radius: 0; }
+.dexhead .mode button.on { background: var(--ink); color: #fff; }
 .dexnav { display: flex; gap: 4px; margin-top: 8px; }
 .dexnav button { font-size: 13px; padding: 3px 12px; }
 .dexnav button.on { background: var(--ink); color: #fff; }
@@ -151,6 +155,8 @@ body.noscroll { overflow: hidden; }
 @media (max-width: 700px) {
   .wrap { padding: 8px; }
   h1 { font-size: 15px; }
+  .dexhead .cnt { display: none; }   /* 폰은 머리 한 줄에 스위치까지 — 개수는 처음 화면 버튼에 있음 */
+  .dexhead .mode { margin-left: auto; }
   .tag { font-size: 8px; padding: 0 2px; }
   .tag.pod { font-size: 7px; padding: 0 2px; }
   .tag .full { display: none; }
