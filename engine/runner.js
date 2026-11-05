@@ -109,12 +109,12 @@ $('auto').addEventListener('change', () => {
 
 function setMode(m) {
   MODE = m;
-  document.querySelectorAll('#mode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
+  document.querySelectorAll('.mode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
   document.querySelectorAll('[data-m]').forEach((el) => { el.textContent = el.dataset[m]; });
   WORLD.mode();
   say(cur);
 }
-document.querySelectorAll('#mode button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+document.querySelectorAll('.mode button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
 function switchScene(sc) {
   SC = sc;

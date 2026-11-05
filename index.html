@@ -13,6 +13,7 @@
   <canvas id="titleCv" width="160" height="120"></canvas>
   <div class="menu">
     <button id="goStart" class="main">시작하기<span class="s" id="startSub"></span></button>
+    <button id="goTour">살펴보기<span class="s" id="tourSub"></span></button>
     <button id="goDex">도감<span class="s" id="dexSub"></span></button>
   </div>
 </div>
@@ -23,6 +24,26 @@
     <div class="dexnav" id="dexNav"></div>
   </div>
   <div id="dexBody"></div>
+</div>
+
+<div id="tour" class="screen" hidden>
+  <div class="tourhead"><button id="tourBack">← 돌아가기</button><h2>살펴보기</h2></div>
+  <div class="tcard">
+    <div class="kick" id="tourKick"></div>
+    <h3 id="tourTitle"></h3>
+    <div class="stage" id="tourStage"><canvas id="tourCv" width="256" height="144"></canvas></div>
+    <div class="trow">
+      <div class="terms" id="tourTerms"></div>
+      <div class="mode">
+        <button data-mode="m" class="on">비유</button>
+        <button data-mode="t">용어</button>
+      </div>
+    </div>
+    <p class="tbody" id="tourBody"></p>
+    <div class="tterm" id="tourTerm" hidden></div>
+    <div class="tscenes" id="tourScenes" hidden></div>
+  </div>
+  <div class="tnav"><button id="tourPrev">◀</button><div class="dots" id="tourDots"></div><button id="tourNext">▶</button></div>
 </div>
 
 <div class="wrap" id="simScreen" hidden>
@@ -83,6 +104,7 @@
 <script src="games/k8s/scene6.js"></script>
 <script src="games/k8s/scene7.js"></script>
 <script src="games/k8s/dex.js"></script>
+<script src="games/k8s/tour.js"></script>
 <script src="games/k8s/main.js"></script>
 </body>
 </html>

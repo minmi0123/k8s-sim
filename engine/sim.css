@@ -90,6 +90,45 @@ canvas { display: block; width: 100%; image-rendering: pixelated; image-renderin
 .dexit .scs button { font-size: 12px; padding: 0 5px; }
 @media (hover: hover) { .dexhead button:not(.on):hover, .dexit .scs button:hover { background: #fff3d6; } }
 
+/* 살펴보기: 번호 · 질문 제목 · 멈춘 무대(그 장 요소만 밝게) · 설명 · 「~란?」 패널 · 넘기기 */
+#tour { max-width: 680px; padding: 0 14px 30px; }
+.tourhead { display: flex; align-items: center; gap: 10px; padding: 10px 0 8px; border-bottom: 2px solid var(--ink); }
+.tourhead h2 { font-size: 18px; margin: 0; }
+#tour button { font: inherit; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); cursor: pointer; }
+.tourhead button { font-size: 13px; padding: 4px 10px; }
+.tcard { margin-top: 12px; background: var(--paper); border: 2px solid var(--ink); border-radius: 6px; padding: 12px 14px 14px; }
+.tag.big { font-size: 13px; font-weight: bold; padding: 1px 6px; border: 2px solid var(--accent); }
+.tcard .kick { font-size: 12px; font-weight: bold; color: var(--accent); }
+.tcard h3 { font-size: 19px; margin: 2px 0 10px; letter-spacing: -.5px; }
+.trow { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; }
+.terms { display: flex; flex-wrap: wrap; gap: 5px; flex: 1; }
+#tour .terms button { font-size: 13px; padding: 3px 10px; border-color: var(--accent); border-radius: 14px; }
+#tour .terms button.on { background: var(--accent); color: #fff; }
+#tour .mode button { border: 0; border-radius: 0; padding: 4px 12px; font-size: 13px; }
+#tour .mode button.on { background: var(--ink); color: #fff; }
+.tbody { font-size: 15.5px; line-height: 1.75; margin: 12px 0 0; word-break: keep-all; }
+.tterm { margin-top: 12px; background: #fffdf5; border: 2px solid var(--accent); border-radius: 6px; padding: 8px 12px 10px; animation: pop2 .2s ease-out; }
+@keyframes pop2 { from { opacity: 0; transform: translateY(-4px); } }
+.tterm .tph { display: flex; align-items: center; gap: 8px; }
+.tterm .tph b { font-size: 15px; }
+#tour .tterm .tph button { margin-left: auto; font-size: 12px; padding: 1px 8px; }
+.tterm p { margin: 6px 0 0; font-size: 14px; line-height: 1.65; word-break: keep-all; }
+.tterm .def { font-weight: bold; }
+.tterm .ana span { display: inline-block; font-size: 11px; font-weight: bold; color: #fff; background: var(--accent); border-radius: 3px; padding: 0 5px; margin-right: 6px; }
+.tterm .more { color: #5a4a56; }
+.tterm .scs, .tscenes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 8px; font-size: 12px; color: #7a6a6a; }
+#tour .tterm .scs button { font-size: 12px; padding: 0 6px; }
+.tscenes { margin-top: 14px; gap: 6px; }
+#tour .tscenes button { font-size: 13px; padding: 5px 10px; }
+.tnav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 14px; }
+#tour .tnav > button { font-size: 15px; padding: 6px 16px; box-shadow: 0 3px 0 var(--ink); }
+#tour .tnav > button:active { transform: translateY(3px); box-shadow: none; }
+#tour .tnav > button:disabled { opacity: .3; cursor: default; box-shadow: none; transform: none; }
+.dots { display: flex; gap: 6px; }
+#tour .dots button { width: 11px; height: 11px; padding: 0; border-radius: 50%; background: #fff; }
+#tour .dots button.on { background: var(--ink); }
+@media (hover: hover) { #tour button:not(.on):not(:disabled):hover { background: #fff3d6; } }
+
 /* 폰: 장면 탭은 옆으로 넘기는 한 줄, 이름표는 작고 짧게 */
 @media (max-width: 700px) {
   .wrap { padding: 8px; }
@@ -102,4 +141,9 @@ canvas { display: block; width: 100%; image-rendering: pixelated; image-renderin
   .say p { font-size: 14px; }
   .ctrl button { padding: 6px 10px; }
   .dexlist { grid-template-columns: 1fr; }
+  #tour { padding: 0 8px 24px; }
+  .tcard { padding: 10px 10px 12px; }
+  .tcard h3 { font-size: 17px; }
+  .tbody { font-size: 14.5px; }
+  .tag.big { font-size: 10px; padding: 0 3px; border-width: 1.5px; }
 }

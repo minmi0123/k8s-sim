@@ -65,6 +65,17 @@ async function runCase(arg) {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   await page.goto(URL);
+  // 살펴보기: 모든 장 · 「~란?」 패널을 연다 (그림을 찍으려고 장면 상태를 잠깐 바꾸므로, 그 뒤 장면 결과가 기준과 같아야 함)
+  await page.evaluate(() => {
+    sim.show('tour');
+    document.querySelectorAll('#tourDots button').forEach((d) => {
+      d.click();
+      document.querySelectorAll('#tourTerms button').forEach((b) => b.click());
+    });
+    document.querySelectorAll('#tourScenes button')[3].click();   // 마지막 장의 장면 ④ 버튼
+  });
+  const opened = await page.evaluate(() => sim.screen === 'sim' && document.querySelector('#scenes button.on').textContent);
+  if (!opened || !opened.startsWith('④')) { console.log(`살펴보기 → 장면 ④ 이동 실패: ${opened}`); process.exit(1); }
   await page.evaluate(() => sim.show('sim'));
 
   // 갈래 목록: 칩이 있으면 칩마다, 없으면 클릭할 수 있는 직원마다

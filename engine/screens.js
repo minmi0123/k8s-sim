@@ -1,4 +1,4 @@
-// 엔진: 처음 화면 · 도감 화면
+// 엔진: 처음 화면 · 도감 화면 · 살펴보기 화면
 'use strict';
 
 // ===== 처음 화면 · 도감 (내용은 게임 dex.js: DEX · DEX_GROUPS · drawTitle) =====
@@ -9,8 +9,10 @@ function show(name) {
   $('home').hidden = name !== 'home';
   $('dex').hidden = name !== 'dex';
   $('simScreen').hidden = name !== 'sim';
+  $('tour').hidden = name !== 'tour';
   window.scrollTo(0, 0);
   if (name === 'dex') { spyHold = 0; dexNavOn(0); }
+  if (name === 'tour') renderTour(tourAt);
 }
 
 const CIRC = '①②③④⑤⑥⑦';
@@ -85,6 +87,83 @@ function renderDex() {
   $('dexCount').textContent = `용어 ${DEX.length}개`;
 }
 
+// ===== 살펴보기 (내용은 게임 tour.js: TOUR · TERM — 그림은 slide.pic() 이 준다) =====
+
+let tourAt = 0;
+const tourPics = [];
+const el = (tag, cls, text) => { const d = document.createElement(tag); if (cls) d.className = cls; if (text != null) d.textContent = text; return d; };
+const bothTxt = (d, o) => { d.dataset.m = o.m; d.dataset.t = o.t; d.textContent = L(o); return d; };   // 비유/용어 전환(setMode)이 바꿔 줌
+function sceneBtns(box, list, long) {
+  list.forEach((n) => {
+    const b = long ? bothTxt(el('button'), SCENES[n - 1]) : el('button', '', CIRC[n - 1]);
+    b.title = SCENES[n - 1].m;
+    b.addEventListener('click', () => openScene(n));
+    box.appendChild(b);
+  });
+}
+function drawTourPic(pic) {   // 그 장의 요소만 밝게: 전체를 흐리게 덮고 hl 칸만 원래 그림으로 되살린 뒤 테두리
+  const g = $('tourCv').getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.drawImage(pic.img, 0, 0);
+  const hl = pic.hl || [];
+  if (hl.length && pic.dim !== false) {
+    g.fillStyle = 'rgba(61, 44, 58, .55)';
+    g.fillRect(0, 0, W, H);
+    hl.forEach(([x, y, w, h]) => g.drawImage(pic.img, x, y, w, h, x, y, w, h));
+  }
+  g.fillStyle = '#e8734a';
+  hl.forEach(([x, y, w, h]) => { g.fillRect(x - 1, y - 1, w + 2, 1); g.fillRect(x - 1, y + h, w + 2, 1); g.fillRect(x - 1, y, 1, h); g.fillRect(x + w, y, 1, h); });
+  const st = $('tourStage');
+  st.querySelectorAll('.tag').forEach((d) => d.remove());
+  pic.tags.forEach((t) => { const d = makeTag(t.txt, t.cls, t.s); st.appendChild(d); place(d, t.at[0], t.at[1]); });
+}
+function openTerm(k, btn) {
+  const box = $('tourTerm');
+  const same = !box.hidden && box.dataset.k === k;
+  $('tourTerms').querySelectorAll('button').forEach((b) => b.classList.toggle('on', !same && b === btn));
+  box.hidden = same;
+  if (same) return;
+  const t = TERM[k];
+  box.dataset.k = k;
+  box.innerHTML = '';
+  const h = el('div', 'tph');
+  h.appendChild(el('b', '', t.q));
+  const x = el('button', '', '닫기 ✕');
+  x.addEventListener('click', () => openTerm(k));
+  h.appendChild(x);
+  box.appendChild(h);
+  box.appendChild(el('p', 'def', t.def));
+  const ana = el('p', 'ana');
+  ana.appendChild(el('span', '', '비유'));
+  ana.appendChild(document.createTextNode(t.ana));
+  box.appendChild(ana);
+  box.appendChild(el('p', 'more', t.more));
+  if (t.sc.length) { const scs = el('div', 'scs', '장면에서 보기'); sceneBtns(scs, t.sc); box.appendChild(scs); }
+}
+function renderTour(i) {
+  tourAt = i;
+  const s = TOUR[i];
+  $('tourKick').textContent = s.kick;
+  $('tourTitle').textContent = s.title;
+  bothTxt($('tourBody'), s.body);
+  drawTourPic(tourPics[i] || (tourPics[i] = s.pic()));
+  $('tourTerms').innerHTML = '';
+  s.terms.forEach((k) => {
+    const b = el('button', '', TERM[k].q);
+    b.addEventListener('click', () => openTerm(k, b));
+    $('tourTerms').appendChild(b);
+  });
+  $('tourTerm').hidden = true;
+  const sc = $('tourScenes');
+  sc.innerHTML = '';
+  sc.hidden = !s.scenes;
+  if (s.scenes) sceneBtns(sc, SCENES.map((_, k) => k + 1), true);
+  [...$('tourDots').children].forEach((d, k) => d.classList.toggle('on', k === i));
+  $('tourPrev').disabled = i === 0;
+  $('tourNext').disabled = i === TOUR.length - 1;
+}
+const tourGo = (d) => { const i = tourAt + d; if (i >= 0 && i < TOUR.length) renderTour(i); };
+
 function initScreens() {
   $('startSub').textContent = `장면 ${SCENES.length}개`;
   $('dexSub').textContent = `용어 ${DEX.length}개`;
@@ -94,4 +173,20 @@ function initScreens() {
   $('toHome').addEventListener('click', () => show('home'));
   $('dexBack').addEventListener('click', () => show(dexFrom));
   renderDex();
+  $('tourSub').textContent = `${TOUR.length}장`;
+  $('goTour').addEventListener('click', () => show('tour'));
+  $('tourBack').addEventListener('click', () => show('home'));
+  $('tourPrev').addEventListener('click', () => tourGo(-1));
+  $('tourNext').addEventListener('click', () => tourGo(1));
+  TOUR.forEach((_, k) => {
+    const d = el('button');
+    d.title = TOUR[k].kick;
+    d.addEventListener('click', () => renderTour(k));
+    $('tourDots').appendChild(d);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (screen !== 'tour') return;
+    if (e.key === 'ArrowLeft') tourGo(-1);
+    if (e.key === 'ArrowRight') tourGo(1);
+  });
 }
