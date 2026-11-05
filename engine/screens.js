@@ -83,7 +83,7 @@ function renderDex() {
   $('dexCount').textContent = `용어 ${DEX.length}개`;
 }
 
-// 도감 카드: 큰 도트 · 이름 · 긴 설명(비유 e.l / 용어 e.lt, 없으면 e.d) · 나오는 장면 · ◀ ▶ 로 옆 항목
+// 도감 카드: 큰 도트 · 이름 · 긴 설명(비유 e.l / 용어 e.lt, 없으면 e.d) · ◀ ▶ 로 옆 항목
 const dexOrder = [];   // 목록에 보이는 순서 (묶음 순)
 let cardAt = -1;
 function openCard(k) {
@@ -100,10 +100,6 @@ function openCard(k) {
   $('cardTerm').textContent = e.t;
   const tx = e.l || e.d;
   bothTxt($('cardText'), { m: lines(tx), t: lines(e.lt || tx) });   // 비유판 l / 용어판 lt — 스위치로 하나만
-  const scs = $('cardScenes');
-  scs.innerHTML = '';
-  scs.appendChild(el('span', '', e.sc === ALL ? '모든 장면에 나옵니다' : '장면에서 보기'));
-  sceneBtns(scs, e.sc === ALL ? [] : e.sc);
   const pv = dexOrder[k - 1], nx = dexOrder[k + 1];
   $('cardPrev').disabled = !pv; $('cardPrev').textContent = pv ? `◀ ${pv.m}` : '◀';
   $('cardNext').disabled = !nx; $('cardNext').textContent = nx ? `${nx.m} ▶` : '▶';
