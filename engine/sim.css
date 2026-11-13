@@ -171,3 +171,7 @@ body.noscroll { overflow: hidden; }
   .tbody { font-size: 14.5px; }
   .tag.big { font-size: 10px; padding: 0 3px; border-width: 1.5px; }
 }
+
+/* 민랩노트 허브·개인정보처리방침 링크 */
+.mln-links{text-align:center;font-size:12px;line-height:1.6;margin-top:14px;opacity:.75}
+.mln-links a{color:inherit;text-decoration:underline;text-underline-offset:3px}
